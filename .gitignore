@@ -1,0 +1,10 @@
+.env
+.dbs/
+.query/.cache
+.query/.history
+.query/.token
+
+dist/index.island.js
+dist/index.dev.js
+dist/styles.css
+node_modules/
