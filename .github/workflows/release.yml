@@ -1,0 +1,206 @@
+name: Release & Publish Node.js Package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+
+jobs:
+  publish:
+    # Only run if both conditions are met:
+    # 1. It's a tag push (which we ensure from the 'on' trigger)
+    # 2. The commit message starts with 'release:'
+    if: |
+      github.ref == 'refs/heads/main' &&
+      startsWith(github.event.head_commit.message, 'release:')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check package.json exists
+        run: |
+          if [ ! -f "package.json" ]; then
+            echo "Error: package.json not found"
+            exit 1
+          fi
+
+      # Get version from package.json
+      - name: Get version
+        id: package-version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          if [[ ! $PACKAGE_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "Error: Invalid semantic version format: $PACKAGE_VERSION"
+            exit 1
+          fi
+          echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+
+      # Create and push tag if it doesn't exist  
+      - name: Create and push tag
+        id: create-tag
+        run: |
+          # Configure git credentials for this step
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          VERSION=${{ steps.package-version.outputs.version }}
+          TAG="v${VERSION}"
+
+          if ! git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
+            git tag -a "$TAG" -m "Release version $VERSION"
+            git push origin "$TAG"
+            echo "created=true" >> $GITHUB_OUTPUT
+          else
+            echo "Tag $TAG already exists"
+            echo "created=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Update CHANGELOG.md with latest changes
+      - name: Update CHANGELOG
+        run: |
+          VERSION=${{ steps.package-version.outputs.version }}
+          make changelog $VERSION
+          # Stage the updated CHANGELOG
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for version $VERSION"
+
+      # Check if this is a prerelease by inspecting the commit message
+      - name: Check prerelease status
+        id: prerelease
+        run: |
+          MESSAGE="${{ github.event.head_commit.message }}"
+          if [[ "$MESSAGE" =~ ^release/.*prerelease ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Validate that the package version matches the tag version
+      - name: Validate version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          PACKAGE_VERSION=${{ steps.package-version.outputs.version }}
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Error: Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: |
+          npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Build (if needed)
+        run: npm run build --if-present
+
+      - name: Run tests
+        run: npm test --if-present
+
+      # Check if this version already exists on the registry
+      - name: Check if version exists
+        id: version-exists
+        run: |
+          VERSION=${{ steps.package-version.outputs.version }}
+          if npm view ${{ github.event.repository.name }} versions | grep -q "\"$VERSION\""; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Create GitHub Release using the CHANGELOG file
+      - name: Create Release using CHANGELOG
+        env:
+          RELEASE_COMMIT: "${{ github.sha }}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ steps.package-version.outputs.version }}
+          NOTES=$(awk -v ver="## [${VERSION}]" '
+            BEGIN { capture=0 }
+            $0 ~ ver { capture=1; next }
+            /^## \[/ { if(capture==1) { capture=0 } }
+            capture { print }
+          ' CHANGELOG || echo "No changelog entry found for version $VERSION")
+
+          echo "$NOTES" > $RUNNER_TEMP/notes.txt
+
+          gh release create "v$VERSION" \
+            --target "$RELEASE_COMMIT" \
+            --title "Release $VERSION" \
+            --prerelease=${{ steps.prerelease.outputs.is_prerelease }} \
+            --notes-file "$RUNNER_TEMP/notes.txt"
+
+      # Publish package if the version is not already published
+      - name: Publish package with retries
+        if: steps.version-exists.outputs.exists != 'true'
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Rollback on failure
+      - name: Rollback on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${{ steps.package-version.outputs.version }}
+          TAG="v${VERSION}"
+          echo "Rolling back release version $VERSION..."
+
+          # Delete the tag locally and remotely if we created it
+          if [[ "${{ steps.create-tag.outputs.created }}" == "true" ]]; then
+            git tag -d "$TAG" || true
+            git push --delete origin "$TAG" || true
+          fi
+
+          # Revert the changelog commit if it exists
+          if git log -1 --pretty=%B | grep -q "docs: update changelog for version $VERSION"; then
+            git revert HEAD -n
+            git commit -m "revert: rollback changes for version $VERSION"
+            git push origin main
+          fi
+
+          # Execute rollback using make command
+          echo "Y" | make release-rollback $VERSION
+
+          echo "Release $VERSION has been rolled back."
+
+      # Enhanced failure notification
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Failed to publish package or create release. A rollback has been attempted. Check the logs for more details."
