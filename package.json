@@ -1,6 +1,6 @@
 {
     "name": "@qery/reactive-component",
-    "version": "0.1.5",
+    "version": "0.2.0",
     "description": "A lightweight, powerful Web Component library for building reactive user interfaces with minimal boilerplate and maximum performance.",
     "keywords": [
         "reactive-component",
