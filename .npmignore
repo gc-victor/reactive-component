@@ -1,0 +1,11 @@
+*
+!src/
+!src/index.ts
+!src/index.d.ts
+!dist/
+!dist/index.js
+!README.md
+!CHANGELOG.md
+!LICENSE
+!package.json
+!system_prompt.xml
