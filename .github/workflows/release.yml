@@ -44,13 +44,21 @@ jobs:
             exit 1
           fi
           echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
-
+          
       # Update CHANGELOG.md with latest changes
       - name: Update CHANGELOG
+        uses: orhun/git-cliff-action@v3
+        with:
+          config: cliff.toml
+          args: --verbose
+        env:
+          OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+
+      # Commit CHANGELOG.md
+      - name: Commit CHANGELOG
         run: |
           VERSION=${{ steps.package-version.outputs.version }}
-          make changelog $VERSION
-          # Stage the updated CHANGELOG
           git add CHANGELOG.md
           git commit -m "docs: update changelog for version $VERSION"
 
@@ -144,13 +152,6 @@ jobs:
           if [[ "${{ steps.create-tag.outputs.created }}" == "true" ]]; then
             git tag -d "$TAG" || true
             git push --delete origin "$TAG" || true
-          fi
-
-          # Revert the changelog commit if it exists
-          if git log -1 --pretty=%B | grep -q "docs: update changelog for version $VERSION"; then
-            git revert HEAD -n
-            git commit -m "revert: rollback changes for version $VERSION"
-            git push origin main
           fi
 
           # Execute rollback using make command
