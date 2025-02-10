@@ -1,0 +1,43 @@
+{
+    "name": "@qery/reactive-component",
+    "version": "0.1.5",
+    "description": "A lightweight, powerful Web Component library for building reactive user interfaces with minimal boilerplate and maximum performance.",
+    "keywords": [
+        "reactive-component",
+        "web-component",
+        "reactive",
+        "signal"
+    ],
+    "homepage": "https://github.com/gc-victor/reactive-component#readme",
+    "bugs": {
+        "url": "https://github.com/gc-victor/reactive-component/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gc-victor/reactive-component.git"
+    },
+    "license": "MIT",
+    "author": "Query (https://qery.io)",
+    "type": "module",
+    "main": "dist/index.js",
+    "source": "src/index.ts",
+    "types": "src/index.d.ts",
+    "scripts": {
+        "dev": "query dev",
+        "setup": "query asset public",
+        "build": "make bundle"
+    },
+    "dependencies": {
+        "alien-signals": "^1.0.3"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "~1.9.4",
+        "@qery/query": "~0.12.46",
+        "@qery/query-server": "~0.12.46",
+        "@tailwindcss/cli": "^4.0.3",
+        "esbuild": "0.24.2",
+        "tailwindcss": "^4.0.3",
+        "typescript": "~5.7.3",
+        "update-browserslist-db": "^1.1.2"
+    }
+}
