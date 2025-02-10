@@ -90,23 +90,22 @@ release:
 		echo "Error: Release branch release/$(ARGUMENTS) already exists"; \
 		exit 1; \
 	fi; \
-	# if ! git checkout main; then \
-	# 	echo "Error: Failed to checkout main branch"; \
-	# 	exit 1; \
-	# fi; \
-	# if ! git pull --rebase origin main; then \
-	# 	echo "Error: Failed to pull latest changes from main"; \
-	# 	exit 1; \
-	# fi; \
-	# if ! git checkout -b $$release_branch; then \
-	# 	echo "Error: Failed to create release branch $$release_branch"; \
-	# 	exit 1; \
-	# fi; \
+	if ! git checkout main; then \
+		echo "Error: Failed to checkout main branch"; \
+		exit 1; \
+	fi; \
+	if ! git pull --rebase origin main; then \
+		echo "Error: Failed to pull latest changes from main"; \
+		exit 1; \
+	fi; \
+	if ! git checkout -b $$release_branch; then \
+		echo "Error: Failed to create release branch $$release_branch"; \
+		exit 1; \
+	fi; \
 	node -e "const fs = require('fs'); const pkg = require('./package.json'); pkg.version = '$(ARGUMENTS)'; fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 4) + '\n')"
 	git add package.json && \
 		git commit -m "release: v$(ARGUMENTS)"
-	git push --set-upstream origin main
-	# git push --set-upstream origin $$release_branch
+	git push --set-upstream origin $$release_branch
 
 release-manually: bundle
 	node -e "const fs = require('fs'); const pkg = require('./package.json'); pkg.version = '$(ARGUMENTS)'; fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 4) + '\n')"

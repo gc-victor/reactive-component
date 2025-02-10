@@ -46,13 +46,13 @@ jobs:
           echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
 
       # Update CHANGELOG.md with latest changes
-      # - name: Update CHANGELOG
-      #   run: |
-      #     VERSION=${{ steps.package-version.outputs.version }}
-      #     make changelog $VERSION
-      #     # Stage the updated CHANGELOG
-      #     git add CHANGELOG.md
-      #     git commit -m "docs: update changelog for version $VERSION"
+      - name: Update CHANGELOG
+        run: |
+          VERSION=${{ steps.package-version.outputs.version }}
+          make changelog $VERSION
+          # Stage the updated CHANGELOG
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for version $VERSION"
 
       # Check if this is a prerelease by inspecting the commit message
       - name: Check prerelease status
@@ -64,16 +64,6 @@ jobs:
           else
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
-
-      # Validate that the package version matches the tag version
-      # - name: Validate version
-      #   run: |
-      #     TAG_VERSION=${GITHUB_REF#refs/tags/v}
-      #     PACKAGE_VERSION=${{ steps.package-version.outputs.version }}
-      #     if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
-      #       echo "Error: Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)"
-      #       exit 1
-      #     fi
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
