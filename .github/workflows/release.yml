@@ -48,9 +48,10 @@ jobs:
       # Update CHANGELOG.md with latest changes
       - name: Update CHANGELOG
         uses: orhun/git-cliff-action@v3
+        id: git-cliff
         with:
           config: cliff.toml
-          args: --verbose
+          args: --verbose --unreleased --tag ${{ steps.package-version.outputs.version }} --prepend CHANGELOG.md
         env:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
@@ -61,8 +62,15 @@ jobs:
           VERSION=${{ steps.package-version.outputs.version }}
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout main
+          set +e
           git add CHANGELOG.md
           git commit -m "docs: update changelog for version $VERSION"
+          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git main
+
+      # Print the changelog
+      - name: Print the changelog
+        run: cat "${{ steps.git-cliff.outputs.changelog }}"
 
       # Check if this is a prerelease by inspecting the commit message
       - name: Check prerelease status
@@ -101,40 +109,20 @@ jobs:
         env:
           RELEASE_COMMIT: "${{ github.sha }}"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGELOG: ${{ steps.git-cliff.outputs.content }}
         run: |
           VERSION=${{ steps.package-version.outputs.version }}
-          NOTES=$(awk -v ver="## [${VERSION}]" '
-            BEGIN { capture=0 }
-            $0 ~ ver { capture=1; next }
-            /^## \[/ { if(capture==1) { capture=0 } }
-            capture { print }
-          ' CHANGELOG || echo "No changelog entry found for version $VERSION")
-
-          echo "$NOTES" > $RUNNER_TEMP/notes.txt
-
           gh release create "v$VERSION" \
             --target "$RELEASE_COMMIT" \
             --title "Release $VERSION" \
             --prerelease=${{ steps.prerelease.outputs.is_prerelease }} \
-            --notes-file "$RUNNER_TEMP/notes.txt"
-
-      # Check if this version already exists on the registry
-      - name: Check if version exists
-        id: version-exists
-        run: |
-          VERSION=${{ steps.package-version.outputs.version }}
-          if npm view ${{ github.event.repository.name }} versions | grep -q "\"$VERSION\""; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
+            --notes "${CHANGELOG:-No changelog entry found for version $VERSION}"
 
       # Publish package if the version is not already published
       - name: Publish package with retries
-        if: steps.version-exists.outputs.exists != 'true'
         uses: nick-fields/retry@v2
         with:
-          timeout_minutes: 10
+          timeout_minutes: 5
           max_attempts: 3
           command: npm publish --provenance --access public
         env:
