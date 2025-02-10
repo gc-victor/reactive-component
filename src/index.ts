@@ -310,11 +310,11 @@ export class ReactiveComponent extends HTMLElement {
     private processElement(element: HTMLElement): void {
         for (const attr of Array.from(element.attributes)) {
             const { name, value } = attr;
-            
+
             // Validate value matches alphanumeric pattern
             const alphanumericPattern = /^[a-zA-Z0-9]+$/;
-            if (!alphanumericPattern.test(value)) {
-                throw new Error(`Invalid binding value "${value}": must only contain alphanumeric characters`);
+            if (!alphanumericPattern.test(value) && name.startsWith("$")) {
+                throw new Error(`Invalid binding ${name} value "${value}": must only contain alphanumeric characters`);
             }
 
             if (name === "$ref") {
@@ -585,7 +585,7 @@ export class ReactiveComponent extends HTMLElement {
             stateKey,
             element,
             formattedValue,
-            rawValue: value
+            rawValue: value,
         });
         const handlers = { ...defaultHandlers, ...customHandlers };
 
@@ -638,7 +638,7 @@ export class ReactiveComponent extends HTMLElement {
         stateKey,
         element,
         formattedValue,
-        rawValue
+        rawValue,
     }: {
         stateKey?: string;
         element?: HTMLElement;
