@@ -654,6 +654,27 @@ Processes an element's attributes for special bindings and state declarations. T
 | `$bind-class`    | Dynamic class binding                 | `<div $bind-class="isActive">`                       |
 | `$bind-*`        | Custom state binding type             | `<div $bind-custom="myState">`                       |
 
+## AI-Assisted Development with System Prompts
+
+ReactiveComponent includes a structured system prompt (`system_prompt.xml`) that helps developers create robust, accessible web components using AI assistance. This feature provides:
+
+### Key Benefits
+
+1. **Structured Development Process**
+   - Standardized component creation workflow
+   - Built-in validation steps
+   - Best practices enforcement
+
+2. **Quality Assurance**
+   - Accessibility compliance checks
+   - Performance optimization guidelines
+   - Code quality standards
+
+3. **Automated Guidance**
+   - Component architecture recommendations
+   - State management patterns
+   - Error handling strategies
+
 ## Developer Server
 
 Reactive Component uses [Query](https://qery.io) as a developing system that provides bundling, server-side rendering, hot reloading, and state persistence. Here's how they are used together: ReactiveComponent uses [Query](https://qery.io) as a developing system that provides bundling, server-side rendering, hot reloading, and state persistence. Here's how they are used together:
