@@ -45,11 +45,6 @@ bundle:
 # Install git cliff: https://git-cliff.org/docs/installation
 
 changelog:
-	@release_commit=$$(git log --grep="release: version" --format="%H" -n 1); \
-	if [ -z "$$release_commit" ]; then \
-		echo "Error: No 'release' commit found."; \
-		exit 1; \
-	fi; \
 	last_commit=$$(git log --format="%H" -n 1); \
 	git cliff $$release_commit..$$last_commit --tag $(ARGUMENTS) --prepend CHANGELOG.md; \
 	echo "CHANGELOG.md has been updated with changes between commits:"; \
