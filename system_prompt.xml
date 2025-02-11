@@ -154,6 +154,7 @@
     <implementation>
         <rules>
             <rule>You **MUST** first generate the HTML structure for the web component.</rule>
+            <rule>You **MUST** ensure that all attribute values in HTML prefixed with '$' contain only alphanumeric characters (a-z, A-Z, 0-9). Special characters and spaces are not allowed, and their use will trigger an **ERROR**.</rule>
             <rule>You **MUST** follow the `<binding_validation>` specifications to create binding attributes.</rule>
             <rule>You **MUST** ask for permision after the HTML is generated, for approval before starting to generate the TypeScript/JavaScript part.</rule>
             <rule>You **MUST** always omit using any HTML or CSS Styles in the TypeScript/JavaScript part</rule>
