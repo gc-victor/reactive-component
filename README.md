@@ -16,6 +16,7 @@ In summary, Reactive Component offers reactive state management and declarative 
 - **High Performance:** Direct DOM updates in a ~3.5KB gzipped package.
 - **TypeScript:** Benefit from type safety and smarter tooling.
 - **Framework Agnostic:** Easily integrate with other libraries or legacy systems.
+- **Context API:** Share state between components in a clean, React-like way.
 
 ## Credits
 
@@ -103,6 +104,10 @@ customElements.define("basic-counter", BasicCounter);
    - Tailwind classes provide styling without extra CSS
 
 ## Core Concepts
+
+1. **State Management** - Reactive state that automatically updates the UI
+2. **Computed Properties** - Derived values that update when dependencies change
+3. **Context API** - Share state between components without prop drilling
 
 ### State Management
 
@@ -388,6 +393,103 @@ Key Features Demonstrated:
 - Clean separation of data and presentation
 - Automatic dependency tracking
 
+### Context API
+
+Context provides a way to share values between components without having to explicitly pass a prop through every level of the component tree. This feature is particularly useful for sharing global state such as themes, user data, or application configuration.
+
+1. **Creating Context**
+
+   - Define shared state using the `createContext` function
+   - Provide a state key for storage and an optional debug name
+   - Context is identified by a unique symbol to prevent collisions
+
+2. **Exposing Context**
+
+   - Provider components expose context using `exposeContext(context)`
+   - State changes in provider components automatically update consumers
+   - Multiple contexts can be exposed from a single component
+
+3. **Consuming Context**
+
+   - Child components consume context using `consumeContext(context)`
+   - Consumed context is automatically synchronized with provider updates
+   - Components can consume multiple contexts from different providers
+
+Here's an example of a theme context system:
+
+```typescript
+// Define context and provider component
+const themeContext = createContext('theme');
+
+class ThemeProvider extends ReactiveComponent {
+  constructor() {
+    super();
+    // Initialize state
+    this.setState('theme', {
+      mode: 'light',
+      background: 'bg-slate-200',
+      text: 'text-slate-900'
+    });
+    
+    // Expose the theme context
+    this.exposeContext(themeContext);
+  }
+  
+  toggleTheme() {
+    const currentTheme = this.getState('theme');
+    // Toggle between light and dark mode
+    this.setState('theme', currentTheme.mode === 'light' 
+      ? { mode: 'dark', background: 'bg-slate-900', text: 'text-slate-50' }
+      : { mode: 'light', background: 'bg-slate-200', text: 'text-slate-900' }
+    );
+  }
+}
+customElements.define('theme-provider', ThemeProvider);
+
+// Consumer component
+class ThemeConsumer extends ReactiveComponent {
+  constructor() {
+    super();
+    
+    // Consume the theme context
+    this.consumeContext(themeContext);
+    
+    // Create computed properties based on the theme
+    this.compute('themeMode', [themeContext.state], (theme) => `ThemeMode: ${theme.mode}`);
+  }
+  
+  connectedCallback() {
+    super.connectedCallback();
+    
+    // React to theme changes
+    this.effect(() => {
+      const theme = this.getState('theme');
+      this.classList.add(theme.background, theme.text);
+      this.refs.themeInfo.textContent = `Current Theme: ${theme.mode}`;
+    });
+  }
+}
+customElements.define('theme-consumer', ThemeConsumer);
+```
+
+```html
+<theme-provider>
+  <button type="button" onClick="toggleTheme">Toggle Theme</button>
+  <theme-consumer>
+    <p $bind-text="themeMode"></p>
+    <p $ref="themeInfo"></p>
+  </theme-consumer>
+</theme-provider>
+```
+
+Key Features Demonstrated:
+- Clean provider/consumer pattern for shared state
+- Automatic propagation of state changes
+- Type-safe context consumption
+- Computed properties based on context values
+- Nested component communication without prop drilling
+- Reactive UI updates when context changes
+
 ### Form Handling
 
 Form handling in ReactiveComponent provides sophisticated validation, state management, and real-time feedback capabilities. Here's a detailed breakdown of its features:
@@ -612,6 +714,12 @@ Key Features Demonstrated:
 - `effect(callback: Function)`: Create a side effect that runs when dependencies change
 - `customBindingHandlers(stateKey: string, element: HTMLElement, formattedValue: string, rawValue: StateValue)`: Override to add custom binding handlers for state updates
 
+### Context Methods
+
+- `createContext(stateKey: string)`: Create a new context object for sharing state between components
+- `exposeContext(context: Context)`: Expose state to child components through a context provider
+- `consumeContext(context: Context)`: Subscribe to a context from a parent component
+
 ### Element Processing
 
 Processes an element's attributes for special bindings and state declarations. This method is responsible for:
@@ -737,13 +845,14 @@ The project includes:
 index.ts                  # Reactive Component
 src
 ├── public                # Public Assets
-└── pages                 # Application pages
-    ├── get.index.tsx     # Page server function
-    ├── hot-reload        # Hot reload service
-    ├── index.island.js   # Examples of Reactive Components
-    ├── layout            # Layout components
-    ├── lib               # Helper functions
-    └── styles.css        # Gloval styles
+├── pages                 # Application pages
+│   ├── get.index.tsx     # Page server function
+│   ├── hot-reload        # Hot reload service
+│   ├── index.island.js   # Examples of Reactive Components
+│   ├── layout            # Layout components
+│   ├── lib               # Helper functions
+│   └── styles.css        # Gloval styles
+└── test                  # Test files
 ```
 
 ### Integration Example

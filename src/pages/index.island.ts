@@ -1,4 +1,4 @@
-import { ReactiveComponent } from "@/index.ts";
+import { ReactiveComponent, createContext } from "@/index.ts";
 
 // Basic Counter Component
 class BasicCounter extends ReactiveComponent {
@@ -258,3 +258,82 @@ class PasswordToggle extends ReactiveComponent {
 }
 // Register the custom element
 customElements.define("password-toggle", PasswordToggle);
+
+// Define our theme context type
+interface Theme {
+    mode: "light" | "dark";
+    background: string;
+    text: string;
+}
+
+// Theme Provider Component
+const LIGHT_THEME: Theme = {
+    mode: "light",
+    background: "bg-slate-200",
+    text: "text-slate-900",
+};
+
+const DARK_THEME: Theme = {
+    mode: "dark",
+    background: "bg-slate-900",
+    text: "text-slate-50",
+};
+
+const context = createContext("theme");
+
+class ThemeProvider extends ReactiveComponent {
+    constructor() {
+        super();
+
+        this.setState("theme", LIGHT_THEME);
+
+        this.exposeContext(context);
+    }
+
+    toggleTheme() {
+        const currentTheme = this.getState("theme") as Theme;
+        this.setState("theme", currentTheme.mode === LIGHT_THEME.mode ? DARK_THEME : LIGHT_THEME);
+    }
+}
+customElements.define("theme-provider", ThemeProvider);
+
+// Theme Consumer Component
+class ThemeConsumer extends ReactiveComponent {
+    mode!: string;
+    buttonTheme!: string;
+    themeMode!: string;
+
+    constructor() {
+        super();
+
+        this.consumeContext(context);
+
+        this.setState("themeMode", "ThemeMode: light");
+        this.setState("buttonTheme", "ButtonTheme: light");
+
+        this.compute("themeMode", [context.state], (theme: Theme) => {
+            return `ThemeMode: ${theme.mode}`;
+        });
+
+        this.compute("buttonTheme", [context.state], (theme: Theme) => {
+            return `ButtonTheme: ${theme.mode}`;
+        });
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+
+        this.effect(() => {
+            const context = this.getThemeContext();
+
+            this.classList.remove(LIGHT_THEME.background, DARK_THEME.background, LIGHT_THEME.text, DARK_THEME.text);
+            this.classList.add(context.background, context.text);
+            this.refs.themeInfo.textContent = `Current Theme: ${context.mode}`;
+        });
+    }
+
+    private getThemeContext(): Theme {
+        return this.getState(context.state) as Theme;
+    }
+}
+customElements.define("theme-consumer", ThemeConsumer);
