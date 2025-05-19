@@ -1,10 +1,112 @@
 import { computed, effect, signal } from "alien-signals";
 
+// --- Constants for repetitive strings ---
+const CONTEXT_ID_PREFIX = "reactive-component-context-";
+const REF_ATTRIBUTE = "$ref";
+const STATE_ATTRIBUTE = "$state";
+const BIND_ATTRIBUTE_PREFIX = "$bind-";
+const EVENT_ATTRIBUTE_PREFIX = "on";
+
+// Binding Types
+const BINDING_TYPE_VALUE = "value";
+const BINDING_TYPE_TEXT = "text";
+const BINDING_TYPE_HTML = "html";
+const BINDING_TYPE_CHECKED = "checked";
+const BINDING_TYPE_DISABLED = "disabled";
+const BINDING_TYPE_CLASS = "class";
+const BINDING_TYPE_STYLE = "style";
+const BINDING_TYPE_STATE = "state";
+const BINDING_TYPE_ATTR = "attr";
+
+// Input Types
+const INPUT_TYPE_CHECKBOX = "checkbox";
+const INPUT_TYPE_RADIO = "radio";
+const INPUT_TYPE_NUMBER = "number";
+const INPUT_TYPE_RANGE = "range";
+
+// Event Names
+const EVENT_INPUT = "input";
+const EVENT_CHANGE = "change";
+
+// ClassList Methods
+const CLASS_LIST_ADD = "add";
+const CLASS_LIST_REMOVE = "remove";
+const CLASS_LIST_REPLACE = "replace";
+const CLASS_LIST_TOGGLE = "toggle";
+
+// Attribute Names
+const ATTRIBUTE_CLASS = "class";
+const ATTRIBUTE_NAME = "name";
+const ATTRIBUTE_TYPE = "type";
+
+// Console Warnings/Errors
+const WARN_CONTEXT_NOT_FOUND = (key: string) => `Cannot expose context "${key}": state or computed value not found`;
+const WARN_CONTEXT_CONSUME_NOT_FOUND = (key: string) => `Context "${key}" not found in any parent component`;
+const WARN_COMPUTED_REDEFINED = (key: string) => `Computed property "${key}" is being redefined`;
+const WARN_CHECKBOX_BIND_VALUE = (element: HTMLElement) =>
+    `The checkbox ${element} has ${BIND_ATTRIBUTE_PREFIX}${BINDING_TYPE_VALUE} attribute, use ${BIND_ATTRIBUTE_PREFIX}${BINDING_TYPE_CHECKED} instead.`;
+const WARN_RADIO_BIND_CHECKED = (element: HTMLElement) =>
+    `The radio ${element} has ${BIND_ATTRIBUTE_PREFIX}${BINDING_TYPE_CHECKED} attribute, use ${BIND_ATTRIBUTE_PREFIX}${BINDING_TYPE_VALUE} instead.`;
+const ERROR_INVALID_BINDING_VALUE = (name: string, value: string) =>
+    `Invalid binding ${name} value "${value}": must only contain alphanumeric characters`;
+const ERROR_INVALID_BINDING_TYPE = (type: string, name: string) =>
+    `Invalid binding type "${type}" in attribute "${name}": must only contain alphanumeric characters or hyphens`;
+const ERROR_EVENT_HANDLER_MISSING = "Event binding requires event name and handler";
+const ERROR_HANDLER_NOT_FUNCTION = (handler: string) => `Handler method "${handler}" not found or not a function`;
+
+/**
+ * Provides unique context identity, optional default value, and debugging support.
+ */
+export interface Context {
+    /** Unique identifier for the context */
+    readonly id: symbol;
+    /** Name for the context used in events */
+    readonly eventName: string;
+    /** State key for component storage */
+    readonly state: string;
+}
+
+/**
+ * Creates a new context object for sharing state between components.
+ *
+ * @param stateKey - State key for component storage
+ * @returns A Context object for use with exposeContext and consumeContext
+ *
+ * @example
+ * // Create a theme context
+ * const ThemeContext = createContext('light', 'ThemeContext');
+ */
+export function createContext(stateKey: string): Context {
+    const id = `${CONTEXT_ID_PREFIX}${stateKey}`;
+
+    return {
+        id: Symbol(id),
+        eventName: id,
+        state: stateKey,
+    };
+}
+
+/** Context update event details structure */
+interface ContextUpdateEvent {
+    key: string;
+    value: StateValue;
+    source: ReactiveComponent;
+}
+
 /** Represents possible state values that can be stored and managed by the component */
-type StateValue = string | number | boolean | object | null | undefined;
+export type StateValue = string | number | boolean | object | null | undefined;
 
 /** Valid property types that can be bound to DOM elements */
-type PropertyType = "value" | "text" | "html" | "checked" | "disabled" | "class" | "style" | "state";
+type PropertyType =
+    | typeof BINDING_TYPE_VALUE
+    | typeof BINDING_TYPE_TEXT
+    | typeof BINDING_TYPE_HTML
+    | typeof BINDING_TYPE_CHECKED
+    | typeof BINDING_TYPE_DISABLED
+    | typeof BINDING_TYPE_CLASS
+    | typeof BINDING_TYPE_STYLE
+    | typeof BINDING_TYPE_STATE
+    | typeof BINDING_TYPE_ATTR;
 
 /**
  * A base class for creating reactive web components with automatic DOM binding and state management.
@@ -13,6 +115,12 @@ type PropertyType = "value" | "text" | "html" | "checked" | "disabled" | "class"
 export class ReactiveComponent extends HTMLElement {
     /** Maps state keys to their signal values */
     private state: Map<string, ReturnType<typeof signal>> = new Map();
+
+    /** Tracks exposed context values */
+    private exposedContexts: Set<symbol> = new Set();
+
+    /** Tracks consumed context subscriptions with cleanup functions */
+    private contextSubscriptions: Map<string, () => void> = new Map();
 
     /** Maps keys to their computed signals */
     private derived: Map<string, ReturnType<typeof computed>> = new Map();
@@ -86,6 +194,166 @@ export class ReactiveComponent extends HTMLElement {
     }
 
     /**
+     * Exposes a state value as context that child components can consume
+     * @param {Context} context - The context to expose
+     * @example
+     * ```ts
+     * const theme = createContext('theme');
+     * const colors = createContext('colors');
+     *
+     * class ThemeProvider extends ReactiveComponent {
+     *     constructor() {
+     *         super();
+     *         this.exposeContext(theme);
+     *         this.exposeContext(colors);
+     *     }
+     *     connectedCallback() {
+     *         super.connectedCallback();
+     *         this.setState('theme', 'light');
+     *         this.setState('colors', { primary: '#3498db', secondary: '#2ecc71' });
+     *     }
+     *
+     *     toggleTheme() {
+     *         const currentTheme = this.getState('theme') as string;
+     *         this.setState('theme', currentTheme === 'light' ? 'dark' : 'light');
+     *     }
+     * }
+     * ```
+     * @protected
+     */
+    protected exposeContext(context: Context): void {
+        const key = context.state;
+
+        if (!this.state.has(key) && !this.derived.has(key)) {
+            console.warn(WARN_CONTEXT_NOT_FOUND(key));
+            return;
+        }
+
+        this.exposedContexts.add(context.id);
+
+        // Set up effect to broadcast changes to children
+        this.effect(() => {
+            const value = this.getState(key);
+            this.broadcastContextUpdate(context, value as StateValue);
+        });
+    }
+
+    /**
+     * Broadcasts a context update to child components
+     * @param {Context} context - The context being updated
+     * @param {StateValue} value - The new context value
+     * @private
+     */
+    private broadcastContextUpdate(context: Context, value: StateValue): void {
+        const key = context.state;
+        const event = new CustomEvent<ContextUpdateEvent>(context.eventName, {
+            bubbles: true,
+            composed: true,
+            detail: {
+                key,
+                value,
+                source: this,
+            },
+        });
+
+        this.dispatchEvent(event);
+    }
+
+    /**
+     * Consumes context from a parent component. Subscribes to updates from the nearest
+     * ancestor component that provides this context, and updates local state when the
+     * context value changes.
+     *
+     * @param {Context} context - The context object to consume, previously created with createContext()
+     * @returns {void} No return value
+     * @example
+     * ```ts
+     * // Create context in provider component
+     * const themeContext = createContext('theme');
+     *
+     * // Consume context in child component
+     * class ThemedButton extends ReactiveComponent {
+     *     constructor() {
+     *         super;
+     *         // Now this.theme will automatically update when parent changes
+     *         this.consumeContext(themeContext);
+     *     }
+     * }
+     * ```
+     * @protected
+     */
+    protected consumeContext(context: Context): void {
+        const key = context.state;
+        const provider = this.findContextProvider(context);
+
+        if (!provider) {
+            console.warn(WARN_CONTEXT_CONSUME_NOT_FOUND(key));
+            return;
+        }
+
+        // Initialize with current value
+        const initialValue = provider.getState(key);
+        this.setState(key, initialValue);
+
+        // Set up subscription to future updates
+        const cleanup = this.subscribeToContextUpdates(context, provider, (value) => {
+            const signal = this.state.get(key);
+            if (signal) {
+                signal(value);
+                this.handleStateChange(key);
+            }
+        });
+
+        // Store cleanup function
+        this.contextSubscriptions.set(key, cleanup);
+    }
+
+    /**
+     * Finds the nearest parent component that exposes the specified context
+     * @param {Context} context - The context to find
+     * @returns {ReactiveComponent | null} The provider component or null if not found
+     * @private
+     */
+    private findContextProvider(context: Context): ReactiveComponent | null {
+        let current = this.parentElement;
+
+        while (current) {
+            if (current instanceof ReactiveComponent && current.exposedContexts && current.exposedContexts.has(context.id)) {
+                return current;
+            }
+            current = current.parentElement;
+        }
+
+        return null;
+    }
+
+    /**
+     * Subscribes to context updates from a provider
+     * @param {Context} context - Context to subscribe to
+     * @param {ReactiveComponent} provider - Provider component
+     * @param {function} callback - Callback to run when context updates
+     * @returns {function} Cleanup function to unsubscribe
+     * @private
+     */
+    private subscribeToContextUpdates(context: Context, provider: ReactiveComponent, callback: (value: StateValue) => void): () => void {
+        const key = context.state;
+        const handler = (e: Event) => {
+            const customEvent = e as CustomEvent<ContextUpdateEvent>;
+            const detail = customEvent.detail;
+
+            if (detail.key === key && detail.source === provider) {
+                callback(detail.value);
+            }
+        };
+
+        provider.addEventListener(context.eventName, handler);
+
+        return () => {
+            provider.removeEventListener(context.eventName, handler);
+        };
+    }
+
+    /**
      * Lifecycle method called when component is disconnected from the DOM.
      * Cleans up effects and observers.
      */
@@ -94,6 +362,12 @@ export class ReactiveComponent extends HTMLElement {
             observer.disconnect();
         }
         this.observers.clear();
+
+        // Cleanup context subscriptions
+        for (const cleanup of this.contextSubscriptions.values()) {
+            cleanup();
+        }
+        this.contextSubscriptions.clear();
     }
 
     /**
@@ -217,22 +491,44 @@ export class ReactiveComponent extends HTMLElement {
      * ```
      * @protected
      */
-    protected compute(key: string, sources: string[], computation: (...args: unknown[]) => StateValue): void {
+    protected compute<T extends StateValue[]>(key: string, sources: string[], computation: (...args: T) => StateValue): void {
         if (this.derived.has(key)) {
-            console.warn(`Computed property "${key}" is being redefined`);
+            console.warn(WARN_COMPUTED_REDEFINED(key));
         }
 
         const computedSignal = computed(() => {
-            const values = sources.map((source) => this.getState(source));
+            const values = sources.map((source) => this.getState(source)) as T;
             const result = computation(...values);
+
             return this.coerceValue(result);
         });
 
         this.derived.set(key, computedSignal);
 
         this.effect(() => {
-            this.handleStateChange(key);
+            // Read the signal to create the dependency
+            const value = computedSignal();
+
+            // Then update any bindings
+            this.updateBindingsForKey(key, value);
         });
+    }
+
+    /**
+     * Updates all DOM elements bound to the specified state key with a new value.
+     * Iterates through all elements bound to the key and updates them according to their binding type.
+     *
+     * @param {string} key - The state key whose bindings should be updated
+     * @param {StateValue} value - The new value to apply to the bound elements
+     * @private
+     */
+    private updateBindingsForKey(key: string, value: StateValue): void {
+        const bindings = this.bindings.get(key);
+        if (bindings) {
+            for (const { element, type } of bindings) {
+                this.updateBinding(key, element, type, value);
+            }
+        }
     }
 
     /**
@@ -314,46 +610,47 @@ export class ReactiveComponent extends HTMLElement {
             // Validate value matches alphanumeric pattern
             const alphanumericPattern = /^[a-zA-Z0-9]+$/;
             if (!alphanumericPattern.test(value) && name.startsWith("$")) {
-                throw new Error(`Invalid binding ${name} value "${value}": must only contain alphanumeric characters`);
+                console.error(ERROR_INVALID_BINDING_VALUE(name, value));
+                continue;
             }
 
-            if (name === "$ref") {
-                if (!value) {
-                    throw new Error("Ref attribute requires a value");
-                }
+            if (name === REF_ATTRIBUTE) {
                 this.refs[value] = element;
                 element.removeAttribute(name);
-            } else if (name === "$state") {
+            } else if (name === STATE_ATTRIBUTE) {
                 // Handle direct state declaration
                 const stateKey = value;
-                if (!stateKey) {
-                    throw new Error("State binding requires a key");
-                }
                 this.stateElements.set(stateKey, element);
-                const hasBindHtml = element.hasAttribute("$bind-html");
+                const hasBindHtml = element.hasAttribute(BIND_ATTRIBUTE_PREFIX + BINDING_TYPE_HTML);
                 const initialValue = this.coerceValue(hasBindHtml ? element.innerHTML : element.textContent);
                 this.setState(stateKey, initialValue);
-                this.addBinding(stateKey, element, "state");
+                this.addBinding(stateKey, element, BINDING_TYPE_STATE);
                 element.removeAttribute(name);
-            } else if (name.startsWith("$bind-")) {
-                const type = name.replace("$bind-", "") as PropertyType;
-                if (!type || !value) {
-                    throw new Error("Binding requires both type and state key");
+            } else if (name.startsWith(BIND_ATTRIBUTE_PREFIX)) {
+                const type = name.replace(BIND_ATTRIBUTE_PREFIX, "") as PropertyType;
+                // Validate type format
+                const validBindingTypePattern = /^[a-zA-Z0-9-]+$/;
+                if (!validBindingTypePattern.test(type)) {
+                    console.error(ERROR_INVALID_BINDING_TYPE(type, name));
+                    continue;
                 }
                 const bindKey = value;
+
                 this.addBinding(bindKey, element, type);
                 element.removeAttribute(name);
-            } else if (name.startsWith("on")) {
-                const eventName = name.slice(2);
+            } else if (name.startsWith(EVENT_ATTRIBUTE_PREFIX)) {
+                const eventName = name.slice(EVENT_ATTRIBUTE_PREFIX.length);
                 if (!eventName || !value) {
-                    throw new Error("Event binding requires event name and handler");
+                    console.error(ERROR_EVENT_HANDLER_MISSING);
+                    continue;
                 }
                 const handler = value;
-                const handlerFn = (this as Record<string, unknown>)[handler];
-                if (typeof handlerFn !== "function") {
-                    throw new Error(`Handler method "${handler}" not found or not a function`);
-                }
                 const boundHandler = (e: Event) => {
+                    const handlerFn = (this as Record<string, unknown>)[handler];
+                    if (typeof handlerFn !== "function") {
+                        console.error(ERROR_HANDLER_NOT_FUNCTION(handler));
+                        return;
+                    }
                     handlerFn.call(this, e);
                 };
                 element.addEventListener(eventName, boundHandler);
@@ -364,11 +661,11 @@ export class ReactiveComponent extends HTMLElement {
 
     /**
      * Coerces input values to appropriate state value types
-     * @param {T} value - Value to coerce
+     * @param {unknown} value - Value to coerce
      * @returns {StateValue} Coerced state value
      * @private
      */
-    private coerceValue<T>(value: unknown): StateValue {
+    private coerceValue(value: unknown): StateValue {
         if (value === undefined || value === null) return;
 
         if (value === "") {
@@ -419,43 +716,33 @@ export class ReactiveComponent extends HTMLElement {
 
         if (
             (element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement) &&
-            (type === "value" || type === "checked")
+            (type === BINDING_TYPE_VALUE || type === BINDING_TYPE_CHECKED)
         ) {
             const inputHandler = () => {
                 let value: StateValue = element.value;
 
                 // Special handling for different input types
                 if (element instanceof HTMLInputElement) {
-                    switch (element.type) {
-                        case "checkbox":
+                    const elementType = element.type;
+
+                    if (elementType === INPUT_TYPE_CHECKBOX) {
+                        if (type === BINDING_TYPE_CHECKED) {
                             value = element.checked;
-                            break;
-                        case "radio":
-                            value = element.value;
-                            if (element.checked) {
-                                // Update all radio buttons in the same group
-                                const radioGroup = Array.from(document.querySelectorAll(`input[type="radio"][name="${element.name}"]`));
-                                for (const radio of radioGroup) {
-                                    if (radio instanceof HTMLInputElement) {
-                                        radio.checked = radio === element;
-                                    }
-                                }
-                            }
-                            break;
-                        case "number":
-                        case "range":
-                            value = element.valueAsNumber;
-                            break;
-                        case "date":
-                        case "datetime-local":
-                        case "time":
-                            value = element.valueAsDate;
-                            break;
-                        case "file":
-                            value = element.files;
-                            break;
-                        default:
-                            value = element.value;
+                        } else if (type === BINDING_TYPE_VALUE) {
+                            console.warn(WARN_CHECKBOX_BIND_VALUE(element));
+                        }
+                    } else if (elementType === INPUT_TYPE_RADIO) {
+                        if (type === BINDING_TYPE_CHECKED) {
+                            console.warn(WARN_RADIO_BIND_CHECKED(element));
+                        } else if (type === BINDING_TYPE_VALUE && element.checked) {
+                            this.setState(stateKey, element.value);
+                            return;
+                        }
+                        return;
+                    } else if (elementType === INPUT_TYPE_NUMBER || elementType === INPUT_TYPE_RANGE) {
+                        value = Number(element.valueAsNumber);
+                    } else {
+                        value = element.value;
                     }
                 } else if (element instanceof HTMLSelectElement) {
                     if (element.multiple) {
@@ -470,24 +757,19 @@ export class ReactiveComponent extends HTMLElement {
                 this.setState(stateKey, value);
             };
 
-            element.addEventListener("input", inputHandler);
             // Handle change event for elements that need it
             if (
                 element instanceof HTMLSelectElement ||
-                (element instanceof HTMLInputElement &&
-                    ["checkbox", "radio", "file", "date", "datetime-local", "time", "month", "week"].includes(element.type))
+                (element instanceof HTMLInputElement && [INPUT_TYPE_CHECKBOX, INPUT_TYPE_RADIO].includes(element.type))
             ) {
-                element.addEventListener("change", inputHandler);
+                element.addEventListener(EVENT_CHANGE, inputHandler);
             }
 
-            // Handle blur event for validation-related input types
-            if (element instanceof HTMLInputElement && ["email", "url", "tel", "number"].includes(element.type)) {
-                element.addEventListener("blur", inputHandler);
-            }
+            element.addEventListener(EVENT_INPUT, inputHandler);
         }
 
         // Initial update
-        this.updateBinding(stateKey, element, type, this.getState(stateKey));
+        this.updateBinding(stateKey, element, type, this.getState(stateKey) as StateValue);
     }
 
     /**
@@ -519,41 +801,54 @@ export class ReactiveComponent extends HTMLElement {
     private updateBinding(stateKey: string, element: HTMLElement, type: PropertyType | string, value: StateValue): void {
         const formattedValue = this.formatValue(value);
         const defaultHandlers: Record<PropertyType | string, () => void> = {
-            state: () => {
+            [BINDING_TYPE_STATE]: () => {
                 if (this.stateElements.has(stateKey)) {
                     element.textContent = formattedValue;
                 }
             },
-            value: () => {
+            [BINDING_TYPE_VALUE]: () => {
                 if ("value" in element) {
+                    // Special handling for radio inputs
+                    if (element instanceof HTMLInputElement && element.type === INPUT_TYPE_RADIO) {
+                        if (formattedValue) {
+                            const radioGroup = this.querySelectorAll(`input[type="${INPUT_TYPE_RADIO}"][name="${element.name}"]`);
+                            for (const radio of Array.from(radioGroup)) {
+                                if (radio instanceof HTMLInputElement) {
+                                    radio.checked = radio.value === formattedValue;
+                                }
+                            }
+                        }
+                        return; // Skip the default value setting
+                    }
+
                     element.value = formattedValue;
                 }
             },
-            text: () => {
+            [BINDING_TYPE_TEXT]: () => {
                 element.textContent = formattedValue;
             },
-            html: () => {
+            [BINDING_TYPE_HTML]: () => {
                 element.innerHTML = formattedValue;
             },
-            checked: () => {
+            [BINDING_TYPE_CHECKED]: () => {
                 if ("checked" in element) {
                     element.checked = Boolean(value);
                 }
             },
-            disabled: () => {
+            [BINDING_TYPE_DISABLED]: () => {
                 if ("disabled" in element) {
                     element.disabled = Boolean(value);
                 }
             },
-            class: () => {
+            [BINDING_TYPE_CLASS]: () => {
                 if (!value || typeof value !== "object") return;
 
                 for (const [method, val] of Object.entries(value)) {
-                    if (method === "add" || method === "remove") {
+                    if (method === CLASS_LIST_ADD || method === CLASS_LIST_REMOVE) {
                         Array.isArray(val) ? element.classList[method](...val) : element.classList[method](val);
-                    } else if (method === "replace" && Array.isArray(val) && val.length === 2) {
+                    } else if (method === CLASS_LIST_REPLACE && Array.isArray(val) && val.length === 2) {
                         element.classList.replace(val[0], val[1]);
-                    } else if (method === "toggle") {
+                    } else if (method === CLASS_LIST_TOGGLE) {
                         if (typeof val === "string") {
                             element.classList.toggle(val);
                         } else if (typeof val === "object") {
@@ -563,10 +858,10 @@ export class ReactiveComponent extends HTMLElement {
                 }
 
                 if (element.classList.length === 0) {
-                    element.removeAttribute("class");
+                    element.removeAttribute(ATTRIBUTE_CLASS);
                 }
             },
-            attr: () => {
+            [BINDING_TYPE_ATTR]: () => {
                 if (typeof value === "string") {
                     element.removeAttribute(value);
                 } else if (typeof value === "object" && value !== null) {
@@ -594,10 +889,11 @@ export class ReactiveComponent extends HTMLElement {
 
     /**
      * Protected method to allow child classes to add custom binding handlers
-     * @param {string} stateKey - The key of the state being updated
-     * @param {HTMLElement} element - The DOM element being updated
-     * @param {string} formattedValue - The formatted string value
-     * @param {StateValue} rawValue - The raw state value before formatting
+     * @param {object} params - Parameters for the handler
+     * @param {string} params.stateKey - The key of the state being updated
+     * @param {HTMLElement} params.element - The DOM element being updated
+     * @param {string} params.formattedValue - The formatted string value
+     * @param {StateValue} params.rawValue - The raw state value before formatting
      * @returns {Record<string, () => void>} Record of custom binding handlers
      * @example
      * ```ts

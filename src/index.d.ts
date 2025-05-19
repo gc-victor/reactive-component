@@ -1,3 +1,25 @@
+/**
+ * Provides unique context identity, optional default value, and debugging support.
+ */
+export interface Context {
+    /** Unique identifier for the context */
+    readonly id: symbol;
+    /** Name for the context used in events */
+    readonly eventName: string;
+    /** State key for component storage */
+    readonly state: string;
+}
+/**
+ * Creates a new context object for sharing state between components.
+ *
+ * @param stateKey - State key for component storage
+ * @returns A Context object for use with exposeContext and consumeContext
+ *
+ * @example
+ * // Create a theme context
+ * const ThemeContext = createContext('light', 'ThemeContext');
+ */
+export declare function createContext(stateKey: string): Context;
 /** Represents possible state values that can be stored and managed by the component */
 type StateValue = string | number | boolean | object | null | undefined;
 /**
@@ -7,6 +29,10 @@ type StateValue = string | number | boolean | object | null | undefined;
 export declare class ReactiveComponent extends HTMLElement {
     /** Maps state keys to their signal values */
     private state;
+    /** Tracks exposed context values */
+    private exposedContexts;
+    /** Tracks consumed context subscriptions with cleanup functions */
+    private contextSubscriptions;
     /** Maps keys to their computed signals */
     private derived;
     /** Maps state keys to their bound DOM elements and binding types */
@@ -65,6 +91,83 @@ export declare class ReactiveComponent extends HTMLElement {
      */
     connectedCallback(): void;
     /**
+     * Exposes a state value as context that child components can consume
+     * @param {Context} context - The context to expose
+     * @example
+     * ```ts
+     * const theme = createContext('theme');
+     * const colors = createContext('colors');
+     *
+     * class ThemeProvider extends ReactiveComponent {
+     *     constructor() {
+     *         super();
+     *         this.exposeContext(theme);
+     *         this.exposeContext(colors);
+     *     }
+     *     connectedCallback() {
+     *         super.connectedCallback();
+     *         this.setState('theme', 'light');
+     *         this.setState('colors', { primary: '#3498db', secondary: '#2ecc71' });
+     *     }
+     *
+     *     toggleTheme() {
+     *         const currentTheme = this.getState('theme') as string;
+     *         this.setState('theme', currentTheme === 'light' ? 'dark' : 'light');
+     *     }
+     * }
+     * ```
+     * @protected
+     */
+    protected exposeContext(context: Context): void;
+    /**
+     * Broadcasts a context update to child components
+     * @param {string} key - The context key being updated
+     * @param {StateValue} value - The new context value
+     * @private
+     */
+    private broadcastContextUpdate;
+    /**
+     * Consumes context from a parent component. Subscribes to updates from the nearest
+     * ancestor component that provides this context, and updates local state when the
+     * context value changes.
+     *
+     * @param {Context} context - The context object to consume, previously created with createContext()
+     * @returns {void} No return value
+     * @example
+     * ```ts
+     * // Create context in provider component
+     * const themeContext = createContext('theme');
+     *
+     * // Consume context in child component
+     * class ThemedButton extends ReactiveComponent {
+     *     constructor() {
+     *         super;
+     *         // Now this.theme will automatically update when parent changes
+     *         this.consumeContext(themeContext);
+     *     }
+     * }
+     * ```
+     * @protected
+     */
+    protected consumeContext(context: Context): void;
+    /**
+     * Finds the nearest parent component that exposes the specified context
+     * @param {string} key - The context key to find
+     * @returns {ReactiveComponent | null} The provider component or null if not found
+     * @private
+     */
+    private findContextProvider;
+    /**
+     * Subscribes to context updates from a provider
+     * @param {string} key - Context key to subscribe to
+     * @param {ReactiveComponent} provider - Provider component
+     * @param {function} callback - Callback to run when context updates
+     * @returns {function} Cleanup function to unsubscribe
+     * @private
+     */
+    private subscribeToContextUpdates;
+    /**
+     * Updates the state value for the given key and triggers updates to all bound elements.
      * Lifecycle method called when component is disconnected from the DOM.
      * Cleans up effects and observers.
      */
@@ -166,7 +269,16 @@ export declare class ReactiveComponent extends HTMLElement {
      * ```
      * @protected
      */
-    protected compute(key: string, sources: string[], computation: (...args: unknown[]) => StateValue): void;
+    protected compute<T extends StateValue[]>(key: string, sources: string[], computation: (...args: T) => StateValue): void;
+    /**
+     * Updates all DOM elements bound to the specified state key with a new value.
+     * Iterates through all elements bound to the key and updates them according to their binding type.
+     *
+     * @param {string} key - The state key whose bindings should be updated
+     * @param {StateValue} value - The new value to apply to the bound elements
+     * @private
+     */
+    private updateBindingsForKey;
     /**
      * Creates a new reactive effect
      * @param {Function} callback - The effect function to execute
@@ -295,7 +407,7 @@ export declare class ReactiveComponent extends HTMLElement {
      * ```
      * @protected
      */
-    protected customBindingHandlers({ stateKey, element, formattedValue, rawValue }: {
+    protected customBindingHandlers({ stateKey, element, formattedValue, rawValue, }: {
         stateKey?: string;
         element?: HTMLElement;
         formattedValue?: string;
@@ -318,4 +430,3 @@ declare global {
         ReactiveComponent: typeof ReactiveComponent;
     }
 }
-export {};
