@@ -41,6 +41,13 @@ bundle:
         --skipLibCheck \
         --forceConsistentCasingInFileNames
 
+bundle_commit:
+	make bundle && \
+		if [ -f src/index.d.ts ] || [ -f dist/index.js ]; then \
+			git add src/index.d.ts dist/index.js && \
+			git commit -m "build: update bundle"; \
+		fi
+
 # Changelog
 # Install git cliff: https://git-cliff.org/docs/installation
 
@@ -102,6 +109,7 @@ release:
 		echo "Error: Failed to create release branch $$release_branch"; \
 		exit 1; \
 	fi; \
+	make bundle_commit
 	node -e "const fs = require('fs'); const pkg = require('./package.json'); pkg.version = '$(ARGUMENTS)'; fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 4) + '\n')"
 	git add package.json && \
 		git commit -m "release: v$(ARGUMENTS)"
