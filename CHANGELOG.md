@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-05-20
+
+### 🚀 Features
+
+- *(deps)* Update package dependencies
+- Add context api for state sharing
+
+### 🐛 Bug Fixes
+
+- Commit changelog
+
+### 🧪 Testing
+
+- Add tests and coverage tools
+
+### Build
+
+- *(deps)* Update esbuild & tailwindcss
+- Add github actions for testing
+- Bundle commit
+- Update bundle
+
+### Prompt
+
+- Enforce alphanumeric-only values for attributes
+- Enhance state management guidelines and binding constraints
+
+### Release
+
+- V0.3.0
+
 ## [0.2.1] - 2025-02-10
 
 ### 🐛 Bug Fixes
