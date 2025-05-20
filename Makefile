@@ -110,14 +110,16 @@ release:
 		exit 1; \
 	fi; \
 	make bundle_commit
+	make changelog $(ARGUMENTS)
+	git add CHANGELOG.md
 	node -e "const fs = require('fs'); const pkg = require('./package.json'); pkg.version = '$(ARGUMENTS)'; fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 4) + '\n')"
 	git add package.json && \
 		git commit -m "release: v$(ARGUMENTS)"
 	git push --set-upstream origin $$release_branch
 
-release-manually: bundle
+release-manually:
 	node -e "const fs = require('fs'); const pkg = require('./package.json'); pkg.version = '$(ARGUMENTS)'; fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 4) + '\n')"
-	export PROD=true .query/tasks/bundle.sh
+	make bundle_commit
 	make changelog $(ARGUMENTS)
 	git add CHANGELOG.md
 	git commit -m "release: version $(ARGUMENTS)"
