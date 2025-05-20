@@ -842,8 +842,10 @@ pnpm query asset public
 The project includes:
 
 ```
-index.ts                  # Reactive Component
+dist/index.js             # Distributed version of the Reactive Component
 src
+├── index.ts              # Reactive Component
+├── index.d.ts            # Type definitions for Reactive Component
 ├── public                # Public Assets
 ├── pages                 # Application pages
 │   ├── get.index.tsx     # Page server function
@@ -851,8 +853,8 @@ src
 │   ├── index.island.js   # Examples of Reactive Components
 │   ├── layout            # Layout components
 │   ├── lib               # Helper functions
-│   └── styles.css        # Gloval styles
-└── test                  # Test files
+│   └── styles.css        # Global styles
+└── tests                 # Test files
 ```
 
 ### Integration Example

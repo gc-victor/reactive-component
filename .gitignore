@@ -7,4 +7,6 @@
 dist/index.island.js
 dist/index.dev.js
 dist/styles.css
+
+coverage/
 node_modules/
