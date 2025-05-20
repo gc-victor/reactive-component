@@ -21,7 +21,7 @@ export interface Context {
  */
 export declare function createContext(stateKey: string): Context;
 /** Represents possible state values that can be stored and managed by the component */
-type StateValue = string | number | boolean | object | null | undefined;
+export type StateValue = string | number | boolean | object | null | undefined;
 /**
  * A base class for creating reactive web components with automatic DOM binding and state management.
  * Provides declarative state management, computed properties, and automatic DOM updates.
@@ -121,7 +121,7 @@ export declare class ReactiveComponent extends HTMLElement {
     protected exposeContext(context: Context): void;
     /**
      * Broadcasts a context update to child components
-     * @param {string} key - The context key being updated
+     * @param {Context} context - The context being updated
      * @param {StateValue} value - The new context value
      * @private
      */
@@ -152,14 +152,14 @@ export declare class ReactiveComponent extends HTMLElement {
     protected consumeContext(context: Context): void;
     /**
      * Finds the nearest parent component that exposes the specified context
-     * @param {string} key - The context key to find
+     * @param {Context} context - The context to find
      * @returns {ReactiveComponent | null} The provider component or null if not found
      * @private
      */
     private findContextProvider;
     /**
      * Subscribes to context updates from a provider
-     * @param {string} key - Context key to subscribe to
+     * @param {Context} context - Context to subscribe to
      * @param {ReactiveComponent} provider - Provider component
      * @param {function} callback - Callback to run when context updates
      * @returns {function} Cleanup function to unsubscribe
@@ -167,7 +167,6 @@ export declare class ReactiveComponent extends HTMLElement {
      */
     private subscribeToContextUpdates;
     /**
-     * Updates the state value for the given key and triggers updates to all bound elements.
      * Lifecycle method called when component is disconnected from the DOM.
      * Cleans up effects and observers.
      */
@@ -336,7 +335,7 @@ export declare class ReactiveComponent extends HTMLElement {
     private processElement;
     /**
      * Coerces input values to appropriate state value types
-     * @param {T} value - Value to coerce
+     * @param {unknown} value - Value to coerce
      * @returns {StateValue} Coerced state value
      * @private
      */
@@ -367,10 +366,11 @@ export declare class ReactiveComponent extends HTMLElement {
     private updateBinding;
     /**
      * Protected method to allow child classes to add custom binding handlers
-     * @param {string} stateKey - The key of the state being updated
-     * @param {HTMLElement} element - The DOM element being updated
-     * @param {string} formattedValue - The formatted string value
-     * @param {StateValue} rawValue - The raw state value before formatting
+     * @param {object} params - Parameters for the handler
+     * @param {string} params.stateKey - The key of the state being updated
+     * @param {HTMLElement} params.element - The DOM element being updated
+     * @param {string} params.formattedValue - The formatted string value
+     * @param {StateValue} params.rawValue - The raw state value before formatting
      * @returns {Record<string, () => void>} Record of custom binding handlers
      * @example
      * ```ts
