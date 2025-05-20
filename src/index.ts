@@ -563,8 +563,7 @@ export class ReactiveComponent extends HTMLElement {
     private processChildren(root: HTMLElement): void {
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
             acceptNode: (node) => {
-                if (!(node instanceof HTMLElement)) return NodeFilter.FILTER_REJECT;
-                if (node.tagName.includes("-") && node !== this) return NodeFilter.FILTER_REJECT;
+                if ((node as HTMLElement).tagName.includes("-") && node !== this) return NodeFilter.FILTER_REJECT;
                 return NodeFilter.FILTER_ACCEPT;
             },
         });
@@ -869,7 +868,7 @@ export class ReactiveComponent extends HTMLElement {
                         if (val === null || val === false) {
                             element.removeAttribute(attr);
                         } else {
-                            element.setAttribute(attr, String(val));
+                            element.setAttribute(attr, val === true ? "" : String(val));
                         }
                     }
                 }
