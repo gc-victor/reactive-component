@@ -148,18 +148,21 @@ describe("ReactiveComponent Custom Binding Handlers", () => {
         );
         const progressBar = component.querySelector(".progress-bar") as HTMLElement;
         expect(progressBar).not.toBeNull();
+
+        // Initially 0
         expect(progressBar.getAttribute("aria-valuenow")).toBe("0");
         expect(progressBar.style.width).toBe("0%");
+
+        // Update to 50 through reactive system
         component.setProgress(50);
-        progressBar.setAttribute("aria-valuenow", "50");
-        progressBar.style.width = "50%";
         expect(progressBar.getAttribute("aria-valuenow")).toBe("50");
         expect(progressBar.style.width).toBe("50%");
+
+        // Update to 75 through reactive system
         component.setProgress(75);
-        progressBar.setAttribute("aria-valuenow", "75");
-        progressBar.style.width = "75%";
         expect(progressBar.getAttribute("aria-valuenow")).toBe("75");
         expect(progressBar.style.width).toBe("75%");
+
         cleanup();
     });
 
@@ -170,16 +173,17 @@ describe("ReactiveComponent Custom Binding Handlers", () => {
             '<div $bind-custom-font-size="fontSize" $bind-custom-text-color="textColor">Text</div>',
         );
         const textElement = component.querySelector("div") as HTMLElement;
-        textElement.style.fontSize = "16px";
-        textElement.style.color = "black";
+
+        // Initially 16px font size and black color
         expect(textElement.style.fontSize).toBe("16px");
         expect(textElement.style.color).toBe("black");
+
+        // Update through reactive system
         component.fontSize = 24;
         component.textColor = "red";
-        textElement.style.fontSize = "24px";
-        textElement.style.color = "red";
         expect(textElement.style.fontSize).toBe("24px");
         expect(textElement.style.color).toBe("red");
+
         cleanup();
     });
 
@@ -190,20 +194,23 @@ describe("ReactiveComponent Custom Binding Handlers", () => {
             '<div $bind-custom-highlight="isHighlighted">Text</div>',
         );
         const element = component.querySelector("div") as HTMLElement;
+
+        // Initially not highlighted
         expect(element.classList.contains("highlight")).toBe(false);
         expect(element.hasAttribute("data-highlighted")).toBe(false);
+
+        // Toggle highlight on through reactive system
         component.toggleHighlight();
-        element.classList.add("highlight");
-        element.setAttribute("data-highlighted", "true");
         expect(component.isHighlighted).toBe(true);
         expect(element.classList.contains("highlight")).toBe(true);
         expect(element.hasAttribute("data-highlighted")).toBe(true);
+
+        // Toggle highlight off through reactive system
         component.toggleHighlight();
-        element.classList.remove("highlight");
-        element.removeAttribute("data-highlighted");
         expect(component.isHighlighted).toBe(false);
         expect(element.classList.contains("highlight")).toBe(false);
         expect(element.hasAttribute("data-highlighted")).toBe(false);
+
         cleanup();
     });
 
@@ -214,25 +221,23 @@ describe("ReactiveComponent Custom Binding Handlers", () => {
             '<div $bind-custom-style-config="configuration">Text</div>',
         );
         const element = component.querySelector("div") as HTMLElement;
-        element.style.fontSize = "14px";
-        element.style.color = "blue";
-        element.style.fontWeight = "normal";
-        element.style.padding = "5px";
+
+        // Initially configured with default values
         expect(element.style.fontSize).toBe("14px");
         expect(element.style.color).toBe("blue");
         expect(element.style.fontWeight).toBe("normal");
         expect(element.style.padding).toBe("5px");
+
+        // Update configuration through reactive system
         component.updateConfig({
             size: 18,
             isBold: true,
             padding: 10,
         });
-        element.style.fontSize = "18px";
-        element.style.fontWeight = "bold";
-        element.style.padding = "10px";
         expect(element.style.fontSize).toBe("18px");
         expect(element.style.fontWeight).toBe("bold");
         expect(element.style.padding).toBe("10px");
+
         cleanup();
     });
 });

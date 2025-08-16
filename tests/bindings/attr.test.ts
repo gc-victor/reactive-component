@@ -81,195 +81,68 @@ describe("ReactiveComponent Attribute Bindings", () => {
         });
 
         class AttributeBindingComponent extends TestReactiveComponent {
-            isDisabled!: boolean;
-            placeholderText!: string;
-            customAttr!: string;
+            inputAttrs!: object;
+            divAttrs!: object;
 
             constructor() {
                 super();
-                this.testSetState("isDisabled", false);
-                this.testSetState("placeholderText", "Enter value...");
-                this.testSetState("customAttr", "initial-value");
+                this.testSetState("inputAttrs", { placeholder: "Enter value..." });
+                this.testSetState("divAttrs", { "data-test": "initial-value" });
             }
         }
         customElements.define("test-attr-binding", AttributeBindingComponent);
 
-        it("should bind boolean attributes to state", async () => {
+        it("should bind string attributes using $bind-attr", () => {
             const { component, cleanup } = createComponent<AttributeBindingComponent>(
                 "test-attr-binding",
                 {},
-                '<button $bind-disabled="isDisabled">Button</button>',
-            );
-
-            const button = component.querySelector("button") as HTMLButtonElement;
-            expect(button.disabled).toBe(false);
-
-            component.isDisabled = true;
-
-            button.disabled = true;
-
-            expect(button.disabled).toBe(true);
-            expect(button.hasAttribute("disabled")).toBe(true);
-
-            cleanup();
-        });
-
-        it("should bind string attributes to state", async () => {
-            const { component, cleanup } = createComponent<AttributeBindingComponent>(
-                "test-attr-binding",
-                {},
-                '<input $bind-placeholder="placeholderText" />',
+                '<input $bind-attr="inputAttrs" />',
             );
 
             const input = component.querySelector("input") as HTMLInputElement;
 
-            input.setAttribute("placeholder", "Enter value...");
             expect(input.getAttribute("placeholder")).toBe("Enter value...");
 
-            component.placeholderText = "New placeholder";
-
-            input.setAttribute("placeholder", "New placeholder");
+            component.inputAttrs = { placeholder: "New placeholder" };
 
             expect(input.getAttribute("placeholder")).toBe("New placeholder");
 
             cleanup();
         });
 
-        it("should bind custom attributes to state", async () => {
-            const { component, cleanup } = createComponent<AttributeBindingComponent>(
-                "test-attr-binding",
-                {},
-                '<div $bind-data-test="customAttr"></div>',
-            );
-
-            const div = component.querySelector("div") as HTMLDivElement;
-
-            div.setAttribute("data-test", "initial-value");
-            expect(div.getAttribute("data-test")).toBe("initial-value");
-
-            component.customAttr = "custom-value";
-
-            div.setAttribute("data-test", "custom-value");
-
-            expect(div.getAttribute("data-test")).toBe("custom-value");
-
-            cleanup();
-        });
-
-        it("should handle null and undefined attribute values", async () => {
+        it("should handle null and undefined attribute values with $bind-attr", () => {
             class NullAttrComponent extends TestReactiveComponent {
-                nullAttr!: null | string;
-                undefinedAttr!: undefined | string;
-                emptyAttr!: string;
+                attrs!: object;
 
                 constructor() {
                     super();
-                    this.testSetState("nullAttr", "has-value");
-                    this.testSetState("undefinedAttr", "has-value");
-                    this.testSetState("emptyAttr", "has-value");
+                    this.testSetState("attrs", {
+                        "data-null": "has-value",
+                        "data-undefined": "has-value",
+                        "data-empty": "has-value",
+                    });
                 }
             }
             customElements.define("test-null-attr", NullAttrComponent);
 
-            const { component, cleanup } = createComponent<NullAttrComponent>(
-                "test-null-attr",
-                {},
-                `<div
-                $bind-attr-data-null="nullAttr"
-                $bind-attr-data-undefined="undefinedAttr"
-                $bind-attr-data-empty="emptyAttr"
-            ></div>`,
-            );
+            const { component, cleanup } = createComponent<NullAttrComponent>("test-null-attr", {}, '<div $bind-attr="attrs"></div>');
 
             const div = component.querySelector("div") as HTMLDivElement;
 
-            div.setAttribute("data-null", "has-value");
-            div.setAttribute("data-undefined", "has-value");
-            div.setAttribute("data-empty", "has-value");
+            expect(div.getAttribute("data-null")).toBe("has-value");
+            expect(div.getAttribute("data-undefined")).toBe("has-value");
+            expect(div.getAttribute("data-empty")).toBe("has-value");
 
-            div.setAttribute("$bind-attr-data-null", "nullAttr");
-            div.setAttribute("$bind-attr-data-undefined", "undefinedAttr");
-            div.setAttribute("$bind-attr-data-empty", "emptyAttr");
-
-            component.nullAttr = null;
-            component.undefinedAttr = undefined;
-            component.emptyAttr = "";
-
-            div.removeAttribute("data-null");
-            div.removeAttribute("data-undefined");
-            div.removeAttribute("data-empty");
+            component.attrs = {
+                "data-null": null,
+                "data-undefined": undefined,
+                "data-empty": "",
+            };
 
             expect(div.hasAttribute("data-null")).toBe(false);
             expect(div.hasAttribute("data-undefined")).toBe(false);
             expect(div.hasAttribute("data-empty")).toBe(false);
 
-            cleanup();
-        });
-
-        it("should stringify complex values for attributes", async () => {
-            class ComplexAttrComponent extends TestReactiveComponent {
-                objectAttr!: object;
-                arrayAttr!: number[];
-
-                constructor() {
-                    super();
-                    this.testSetState("objectAttr", { key: "value" });
-                    this.testSetState("arrayAttr", [1, 2, 3]);
-                }
-            }
-            customElements.define("test-complex-attr", ComplexAttrComponent);
-
-            const { component, cleanup } = createComponent<ComplexAttrComponent>(
-                "test-complex-attr",
-                {},
-                `<div
-                $bind-attr-data-object="objectAttr"
-                $bind-attr-data-array="arrayAttr"
-            ></div>`,
-            );
-
-            const div = component.querySelector("div") as HTMLDivElement;
-
-            div.setAttribute("data-object", JSON.stringify({ key: "value" }));
-            div.setAttribute("data-array", JSON.stringify([1, 2, 3]));
-
-            expect(div.getAttribute("data-object")).toBe('{"key":"value"}');
-            expect(div.getAttribute("data-array")).toBe("[1,2,3]");
-
-            component.objectAttr = { updated: "new-value" };
-            component.arrayAttr = [4, 5, 6];
-
-            div.setAttribute("data-object", JSON.stringify({ updated: "new-value" }));
-            div.setAttribute("data-array", JSON.stringify([4, 5, 6]));
-
-            expect(div.getAttribute("data-object")).toBe('{"updated":"new-value"}');
-            expect(div.getAttribute("data-array")).toBe("[4,5,6]");
-
-            cleanup();
-        });
-    });
-
-    describe("Special Attribute Cases", () => {
-        class DisabledAttrComponent extends TestReactiveComponent {
-            isDisabled!: boolean;
-            constructor() {
-                super();
-                this.testSetState("isDisabled", false);
-            }
-        }
-        customElements.define("test-disabled-attr", DisabledAttrComponent);
-
-        it("should properly handle disabled attributes", () => {
-            const { component, cleanup } = createComponent<DisabledAttrComponent>(
-                "test-disabled-attr",
-                {},
-                `<input $bind-disabled="isDisabled" />`,
-            );
-            const input = component.querySelector("input") as HTMLInputElement;
-            expect(input.hasAttribute("disabled")).toBe(false);
-            component.isDisabled = true;
-            input.disabled = true;
-            expect(input.hasAttribute("disabled")).toBe(true);
             cleanup();
         });
     });

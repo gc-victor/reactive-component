@@ -613,11 +613,18 @@ export class ReactiveComponent extends HTMLElement {
                 continue;
             }
 
+            // REF ATTRIBUTE: Creates references to DOM elements for direct access
+            // Example: <button $ref="submitButton">Submit</button>
+            // Usage: this.refs.submitButton.disabled = true;
             if (name === REF_ATTRIBUTE) {
                 this.refs[value] = element;
                 element.removeAttribute(name);
             } else if (name === STATE_ATTRIBUTE) {
-                // Handle direct state declaration
+                // STATE ATTRIBUTE: Declares reactive state with initial value from element content
+                // Examples:
+                // - <span $state="count">0</span> - creates state 'count' with initial value 0
+                // - <p $state="message">Hello</p> - creates state 'message' with initial value "Hello"
+                // - <div $state="content" $bind-html="content"><strong>Initial</strong></div> - HTML content as initial state
                 const stateKey = value;
                 this.stateElements.set(stateKey, element);
                 const hasBindHtml = element.hasAttribute(BIND_ATTRIBUTE_PREFIX + BINDING_TYPE_HTML);
@@ -626,6 +633,15 @@ export class ReactiveComponent extends HTMLElement {
                 this.addBinding(stateKey, element, BINDING_TYPE_STATE);
                 element.removeAttribute(name);
             } else if (name.startsWith(BIND_ATTRIBUTE_PREFIX)) {
+                // BIND ATTRIBUTES: Creates reactive bindings between state and DOM properties
+                // Examples:
+                // - $bind-value="text" - two-way binding with input value
+                // - $bind-text="username" - one-way binding to textContent
+                // - $bind-checked="isEnabled" - binding to checkbox checked state
+                // - $bind-disabled="isDisabled" - binding to form element disabled state
+                // - $bind-class="validationClasses" - dynamic class manipulation
+                // - $bind-html="content" - binding to innerHTML (security: escape user input)
+                // - $bind-progress="progressValue" - custom binding (requires customBindingHandlers)
                 const type = name.replace(BIND_ATTRIBUTE_PREFIX, "") as PropertyType;
                 // Validate type format
                 const validBindingTypePattern = /^[a-zA-Z0-9-]+$/;
@@ -638,6 +654,13 @@ export class ReactiveComponent extends HTMLElement {
                 this.addBinding(bindKey, element, type);
                 element.removeAttribute(name);
             } else if (name.startsWith(EVENT_ATTRIBUTE_PREFIX)) {
+                // EVENT ATTRIBUTES: Binds DOM events to component methods
+                // Examples:
+                // - onclick="handleClick" - binds click event to this.handleClick method
+                // - oninput="updateText" - binds input event to this.updateText method
+                // - onsubmit="submitForm" - binds submit event to this.submitForm method
+                // - onmouseover="showTooltip" - binds mouseover event to this.showTooltip method
+                // Note: Method must exist on the component class and be accessible
                 const eventName = name.slice(EVENT_ATTRIBUTE_PREFIX.length);
                 if (!eventName || !value) {
                     console.error(ERROR_EVENT_HANDLER_MISSING);
@@ -652,7 +675,7 @@ export class ReactiveComponent extends HTMLElement {
                     }
                     handlerFn.call(this, e);
                 };
-                element.addEventListener(eventName, boundHandler);
+                element.addEventListener(eventName.toLowerCase(), boundHandler);
                 element.removeAttribute(name);
             }
         }
@@ -800,14 +823,22 @@ export class ReactiveComponent extends HTMLElement {
     private updateBinding(stateKey: string, element: HTMLElement, type: PropertyType | string, value: StateValue): void {
         const formattedValue = this.formatValue(value);
         const defaultHandlers: Record<PropertyType | string, () => void> = {
+            // STATE BINDING: Updates text content of elements with $state attribute
+            // Example: <span $state="count">0</span> - displays state value as text
             [BINDING_TYPE_STATE]: () => {
                 if (this.stateElements.has(stateKey)) {
                     element.textContent = formattedValue;
                 }
             },
+            // VALUE BINDING: Updates value property of form elements
+            // Examples from demo:
+            // - <input $bind-value="text" /> - two-way text input binding
+            // - <select $bind-value="selectedOption" /> - dropdown selection binding
+            // - <input type="range" $bind-value="celsius" /> - slider value binding
+            // - Radio inputs get special handling to update entire radio group
             [BINDING_TYPE_VALUE]: () => {
                 if ("value" in element) {
-                    // Special handling for radio inputs
+                    // Special handling for radio inputs - update entire radio group
                     if (element instanceof HTMLInputElement && element.type === INPUT_TYPE_RADIO) {
                         if (formattedValue) {
                             const radioGroup = this.querySelectorAll(`input[type="${INPUT_TYPE_RADIO}"][name="${element.name}"]`);
@@ -823,22 +854,46 @@ export class ReactiveComponent extends HTMLElement {
                     element.value = formattedValue;
                 }
             },
+            // TEXT BINDING: Updates textContent property (safe, no HTML parsing)
+            // Examples from demo:
+            // - <span $bind-text="uppercase" /> - displays computed uppercase text
+            // - <span $bind-text="fahrenheit" /> - displays computed temperature
+            // - <span $bind-text="status" /> - displays form validation status
             [BINDING_TYPE_TEXT]: () => {
                 element.textContent = formattedValue;
             },
+            // HTML BINDING: Updates innerHTML property (allows HTML content)
+            // Example from demo:
+            // - <p $bind-html="content" /> - toggles between HTML content like "<strong>Initial</strong>" and "Updated"
+            // Warning: Be careful with user input to avoid XSS attacks
             [BINDING_TYPE_HTML]: () => {
                 element.innerHTML = formattedValue;
             },
+            // CHECKED BINDING: Updates checked property for checkboxes/radio buttons
+            // Example from demo:
+            // - <input type="checkbox" $bind-checked="isEnabled" /> - enables/disables form input
             [BINDING_TYPE_CHECKED]: () => {
                 if ("checked" in element) {
                     element.checked = Boolean(value);
                 }
             },
+            // DISABLED BINDING: Updates disabled property for form elements
+            // Example from demo:
+            // - <input $bind-disabled="isDisabled" /> - dynamically enables/disables based on checkbox state
             [BINDING_TYPE_DISABLED]: () => {
                 if ("disabled" in element) {
                     element.disabled = Boolean(value);
                 }
             },
+            // CLASS BINDING: Advanced class manipulation using object methods
+            // Examples from demo and general usage:
+            // - { add: "active" } - adds 'active' class
+            // - { add: ["class1", "class2"] } - adds multiple classes
+            // - { remove: "hidden" } - removes 'hidden' class
+            // - { replace: ["old-class", "new-class"] } - replaces old with new
+            // - { toggle: "visible" } - toggles 'visible' class
+            // - { toggle: { key: "selected", value: true } } - conditional toggle
+            // Demo uses: $bind-class="isInputValid" and $bind-class="isSatusValid" for validation styling
             [BINDING_TYPE_CLASS]: () => {
                 if (!value || typeof value !== "object") return;
 
@@ -860,12 +915,20 @@ export class ReactiveComponent extends HTMLElement {
                     element.removeAttribute(ATTRIBUTE_CLASS);
                 }
             },
+            // ATTRIBUTE BINDING: Sets/removes HTML attributes dynamically
+            // Examples:
+            // - String value: removes the named attribute
+            // - Object value: { "data-id": "123", "aria-label": "Button" }
+            // - Falsy values (null, false, undefined, "") remove the attribute
+            // - Boolean true sets attribute with empty value (for flags like 'hidden')
+            // Common use cases: accessibility attributes, data attributes, conditional attributes
+            // Demo used: $bind-attr="attrs"
             [BINDING_TYPE_ATTR]: () => {
                 if (typeof value === "string") {
                     element.removeAttribute(value);
                 } else if (typeof value === "object" && value !== null) {
                     for (const [attr, val] of Object.entries(value)) {
-                        if (val === null || val === false) {
+                        if (val === null || val === false || val === undefined || val === "") {
                             element.removeAttribute(attr);
                         } else {
                             element.setAttribute(attr, val === true ? "" : String(val));
@@ -875,6 +938,13 @@ export class ReactiveComponent extends HTMLElement {
             },
         };
 
+        // CUSTOM BINDING HANDLERS: Allows extending with custom binding types
+        // Override customBindingHandlers() in your component to add custom bindings
+        // Examples from demo:
+        // - $bind-progress="progressValue" - custom progress bar binding
+        // - $bind-type="isPasswordVisible" - dynamic input type switching
+        // - $bind-icon-visibility="isPasswordVisible" - show/hide icon elements
+        // Usage: return { "progress": () => { /* custom logic */ }, "type": () => { /* custom logic */ } }
         const customHandlers = this.customBindingHandlers({
             stateKey,
             element,

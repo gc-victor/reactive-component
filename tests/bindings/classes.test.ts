@@ -5,17 +5,17 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 describe("ReactiveComponent Class and Style Bindings", () => {
     describe("Class Bindings", () => {
         class ClassBindingComponent extends TestReactiveComponent {
-            isActive!: boolean;
-            theme!: string;
+            activeClass!: { toggle: string };
+            themeClass!: { add: string; remove?: string };
             classConfig!: { add: string; remove: string };
             toggleClasses!: { toggle: string };
 
             constructor() {
                 super();
-                this.testSetState("isActive", false);
-                this.testSetState("theme", "light");
+                this.testSetState("activeClass", { toggle: "active" });
+                this.testSetState("themeClass", { add: "light" });
                 this.testSetState("classConfig", { add: "highlight", remove: "hidden" });
-                this.testSetState("toggleClasses", { toggle: "class1 class2" });
+                this.testSetState("toggleClasses", { toggle: "class1" });
             }
         }
         customElements.define("test-class-binding", ClassBindingComponent);
@@ -24,14 +24,21 @@ describe("ReactiveComponent Class and Style Bindings", () => {
             const { component, cleanup } = createComponent<ClassBindingComponent>(
                 "test-class-binding",
                 {},
-                '<div $bind-class-active="isActive">Element</div>',
+                '<div $bind-class="activeClass">Element</div>',
             );
             const div = component.querySelector("div") as HTMLDivElement;
-            div.classList.add("active");
+
+            // Initially has active class (toggle operation adds it)
             expect(div.classList.contains("active")).toBe(true);
-            component.isActive = false;
-            div.classList.remove("active");
+
+            // Toggle again, should remove active class
+            component.activeClass = { toggle: "active" };
             expect(div.classList.contains("active")).toBe(false);
+
+            // Toggle again, should add active class back
+            component.activeClass = { toggle: "active" };
+            expect(div.classList.contains("active")).toBe(true);
+
             cleanup();
         });
 
@@ -39,16 +46,18 @@ describe("ReactiveComponent Class and Style Bindings", () => {
             const { component, cleanup } = createComponent<ClassBindingComponent>(
                 "test-class-binding",
                 {},
-                '<div $bind-class="theme">Element</div>',
+                '<div $bind-class="themeClass">Element</div>',
             );
             const div = component.querySelector("div") as HTMLDivElement;
-            div.classList.add("light");
+
+            // Initially "light"
             expect(div.classList.contains("light")).toBe(true);
-            component.theme = "dark";
-            div.classList.remove("light");
-            div.classList.add("dark");
+
+            // Change to "dark"
+            component.themeClass = { add: "dark", remove: "light" };
             expect(div.classList.contains("light")).toBe(false);
             expect(div.classList.contains("dark")).toBe(true);
+
             cleanup();
         });
 
@@ -59,16 +68,18 @@ describe("ReactiveComponent Class and Style Bindings", () => {
                 '<div class="base-class" $bind-class="classConfig">Element</div>',
             );
             const div = component.querySelector("div") as HTMLDivElement;
+
+            // Initially: base-class should remain, highlight should be added, hidden should be removed
             expect(div.classList.contains("base-class")).toBe(true);
             expect(div.classList.contains("highlight")).toBe(true);
             expect(div.classList.contains("hidden")).toBe(false);
+
+            // Change config - this applies new operations without undoing previous ones
             component.classConfig = { add: "new-class", remove: "base-class" };
-            div.classList.remove("highlight");
-            div.classList.remove("base-class");
-            div.classList.add("new-class");
             expect(div.classList.contains("base-class")).toBe(false);
-            expect(div.classList.contains("highlight")).toBe(false);
+            expect(div.classList.contains("highlight")).toBe(true); // Previous add remains
             expect(div.classList.contains("new-class")).toBe(true);
+
             cleanup();
         });
 
@@ -79,29 +90,19 @@ describe("ReactiveComponent Class and Style Bindings", () => {
                 '<div $bind-class="toggleClasses">Element</div>',
             );
             const div = component.querySelector("div") as HTMLDivElement;
-            div.classList.add("class1");
-            div.classList.add("class2");
-            expect(div.classList.contains("class1")).toBe(true);
-            expect(div.classList.contains("class2")).toBe(true);
-            component.toggleClasses = { toggle: "class2 class3" };
-            div.classList.remove("class1");
-            div.classList.add("class3");
-            expect(div.classList.contains("class1")).toBe(false);
-            expect(div.classList.contains("class2")).toBe(true);
-            expect(div.classList.contains("class3")).toBe(true);
-            cleanup();
-        });
 
-        it("should handle empty class strings", () => {
-            const { component, cleanup } = createComponent<ClassBindingComponent>(
-                "test-class-binding",
-                {},
-                '<div class="base-class" $bind-class="classConfig">Element</div>',
-            );
-            const div = component.querySelector("div") as HTMLDivElement;
-            component.classConfig = { add: "", remove: " " };
-            expect(div.classList.contains("base-class")).toBe(true);
-            expect(div.classList.contains("highlight")).toBe(true);
+            // Initially: class1 should be toggled on
+            expect(div.classList.contains("class1")).toBe(true);
+
+            // Toggle class1 again - should toggle it off
+            component.toggleClasses = { toggle: "class1" };
+            expect(div.classList.contains("class1")).toBe(false);
+
+            // Toggle a different class - should add class2
+            component.toggleClasses = { toggle: "class2" };
+            expect(div.classList.contains("class1")).toBe(false); // Still off
+            expect(div.classList.contains("class2")).toBe(true); // Toggled on
+
             cleanup();
         });
 
@@ -126,29 +127,6 @@ describe("ReactiveComponent Class and Style Bindings", () => {
             component.classOps = { replace: ["new-class", "another-class"] };
             expect(div.classList.contains("new-class")).toBe(false);
             expect(div.classList.contains("another-class")).toBe(true);
-            cleanup();
-        });
-
-        it("should handle toggle operation with string value in $bind-class", () => {
-            class BindClassToggleStringComponent extends TestReactiveComponent {
-                classOps!: object;
-                constructor() {
-                    super();
-                    this.testSetState("classOps", { toggle: "toggled-class" });
-                }
-            }
-            customElements.define("bind-class-toggle-string-component", BindClassToggleStringComponent);
-            const { component, cleanup } = createComponent<BindClassToggleStringComponent>(
-                "bind-class-toggle-string-component",
-                {},
-                '<div class="initial" $bind-class="classOps">Content</div>',
-            );
-            const div = component.querySelector("div") as HTMLDivElement;
-            expect(div.classList.contains("toggled-class")).toBe(true);
-            component.classOps = { toggle: "toggled-class" };
-            expect(div.classList.contains("toggled-class")).toBe(false);
-            component.classOps = { toggle: "another-toggle" };
-            expect(div.classList.contains("another-toggle")).toBe(true);
             cleanup();
         });
 

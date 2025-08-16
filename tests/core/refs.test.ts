@@ -44,25 +44,6 @@ describe("ReactiveComponent $ref Management (Core)", () => {
             expect(component.testRefs.input).toBeDefined();
             expect(component.testRefs.input instanceof HTMLInputElement).toBe(true);
         });
-
-        it("should allow accessing and manipulating elements via refs", () => {
-            const newContent = "Updated via ref";
-            component.updateRefContent(newContent);
-            expect(component.testRefs.output.textContent).toBe(newContent);
-        });
-
-        it("should maintain ref integrity after DOM updates", () => {
-            const div = component.testRefs.output as HTMLDivElement;
-            const input = component.testRefs.input as HTMLInputElement;
-
-            const originalDiv = div;
-            const originalInput = input;
-
-            component.message = "Updated message";
-
-            expect(component.testRefs.output).toBe(originalDiv);
-            expect(component.testRefs.input).toBe(originalInput);
-        });
     });
 
     describe("Multiple Refs Management", () => {

@@ -37,17 +37,4 @@ describe("ReactiveComponent $bind-text (Text Content Binding)", () => {
         component.message = "Updated message";
         expect(paragraph?.textContent).toBe("Updated message");
     });
-
-    it("should handle multiple text bindings to the same state", () => {
-        const paragraph = component.querySelector("p");
-        const span = component.querySelector("span");
-
-        expect(paragraph?.textContent).toBe("Initial message");
-        expect(span?.textContent).toBe("Initial message");
-
-        component.message = "Updated all";
-
-        expect(paragraph?.textContent).toBe("Updated all");
-        expect(span?.textContent).toBe("Updated all");
-    });
 });

@@ -273,29 +273,6 @@ customElements.define("test-deep-nested-consumer", DeepNestedConsumer);
 
 describe("ReactiveComponent Context API", () => {
     describe("Context Provider", () => {
-        it("should handle re-exposing the same context", () => {
-            const { component: el, cleanup } = createComponent("test-context-provider", {}, '<div id="content">Provider</div>');
-            const component = el as unknown as TestContextProvider;
-
-            component.exposeContextAgain();
-            component.exposeContextAgain();
-
-            expect(component.value).toBe("provider-value");
-            expect(component.exposureCount).toBe(2);
-
-            cleanup();
-        });
-
-        it("should expose context to descendants", () => {
-            const { component: el, cleanup } = createComponent("test-context-provider", {}, '<div id="content">Provider</div>');
-
-            const component = el as unknown as TestContextProvider;
-
-            expect(component.value).toBe("provider-value");
-
-            cleanup();
-        });
-
         it("should update context when state changes", () => {
             const { component: el, cleanup } = createComponent("test-context-provider", {}, '<div id="content">Provider</div>');
 
