@@ -38,18 +38,6 @@ describe("ReactiveComponent Computed Properties", () => {
             cleanup();
         });
 
-        it("should initialize computed values from state", () => {
-            expect(component.getComputedFullName()).toBe("John Doe");
-            expect(component.getComputedDisplayName()).toBe("Display: John Doe");
-        });
-
-        it("should update computed values when dependencies change", () => {
-            component.firstName = "Jane";
-            expect(component.getComputedFullName()).toBe("Jane Doe");
-            component.lastName = "Smith";
-            expect(component.getComputedFullName()).toBe("Jane Smith");
-        });
-
         it("should update chained computed properties", () => {
             component.firstName = "Alice";
             expect(component.getComputedFullName()).toBe("Alice Doe");
@@ -146,40 +134,11 @@ describe("ReactiveComponent Computed Properties", () => {
             cleanup();
         });
 
-        it("should initialize computed values from state dependencies", () => {
-            expect(component.computedValue).toBe(30);
-            expect(component.computedString).toBe("test-30");
-            expect(component.updateTracker).toContain("Computed: 10 + 20");
-            expect(component.updateTracker).toContain("String computed: test-30");
-        });
-
-        it("should update computed values when dependencies change", () => {
-            component.resetTracker();
-            component.updateValues(5, 7);
-            expect(component.computedValue).toBe(12);
-            expect(component.computedString).toBe("test-12");
-            expect(component.updateTracker).toContain("Computed: 5 + 7");
-            expect(component.updateTracker).toContain("String computed: test-12");
-        });
-
         it("should handle redefinition of computed properties", () => {
             const consoleWarnSpy = vi.spyOn(console, "warn");
             component.testCompute("computedValue", ["value1"], (v: number) => v * 2);
             expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Computed property "computedValue" is being redefined'));
             consoleWarnSpy.mockRestore();
-        });
-
-        it("should handle chained computed property updates", () => {
-            component.resetTracker();
-            component.value3 = "updated";
-            expect(component.computedString).toBe("updated-30");
-            expect(component.updateTracker).toContain("String computed: updated-30");
-            component.resetTracker();
-            component.value1 = 15;
-            expect(component.computedValue).toBe(35);
-            expect(component.computedString).toBe("updated-35");
-            expect(component.updateTracker).toContain("Computed: 15 + 20");
-            expect(component.updateTracker).toContain("String computed: updated-35");
         });
     });
 

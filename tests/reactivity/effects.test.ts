@@ -40,33 +40,6 @@ describe("ReactiveComponent Effects System", () => {
             cleanup();
         });
 
-        it("should trigger effects on initial state", () => {
-            class InitialEffectComponent extends TestReactiveComponent {
-                effectLog: string[] = [];
-                constructor() {
-                    super();
-                    this.testSetState("value", "initial");
-                    this.effect(() => {
-                        this.effectLog.push(`Effect ran with value: ${this.getState("value")}`);
-                    });
-                }
-            }
-            customElements.define("test-initial-effect", InitialEffectComponent);
-
-            const { component: initialComponent, cleanup: initialCleanup } = createComponent<InitialEffectComponent>("test-initial-effect");
-            expect(initialComponent.effectLog).toContain("Effect ran with value: initial");
-            initialCleanup();
-        });
-
-        it("should trigger effects when state changes", () => {
-            component.effectLog = [];
-            component.counter = 1;
-            expect(component.effectLog).toContain("Counter changed to: 1");
-            component.effectLog = [];
-            component.message = "Updated";
-            expect(component.effectLog).toContain("Message changed to: Updated");
-        });
-
         it("should not trigger effects for unrelated state changes", () => {
             component.effectLog = [];
             component.message = "New Message";

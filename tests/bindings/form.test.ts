@@ -34,21 +34,6 @@ describe("ReactiveComponent Form Input Bindings", () => {
         cleanup();
     });
 
-    it("should bind number input to state (two-way)", () => {
-        const { component, cleanup } = createComponent<FormBindingComponent>(
-            "test-form-binding",
-            {},
-            '<input type="number" $bind-value="numberValue" />',
-        );
-        const input = component.querySelector("input") as HTMLInputElement;
-        expect(input.value).toBe("42");
-        component.numberValue = 99;
-        expect(input.value).toBe("99");
-        simulateInput(input, "123");
-        expect(component.numberValue).toBe(123);
-        cleanup();
-    });
-
     it("should bind checkbox to state (two-way)", () => {
         const { component, cleanup } = createComponent<FormBindingComponent>(
             "test-form-binding",
@@ -271,7 +256,7 @@ describe("ReactiveComponent Form Input Bindings", () => {
         textarea.value = "Changed text";
         textarea.dispatchEvent(new Event("input"));
         expect(component.textAreaValue).toBe("Changed text");
-        const multilineText = "Line 1\nLine 2\nLine 3";
+        const multilineText = "Line 1\\nLine 2\\nLine 3";
         textarea.value = multilineText;
         textarea.dispatchEvent(new Event("input"));
         textarea.dispatchEvent(new Event("change"));

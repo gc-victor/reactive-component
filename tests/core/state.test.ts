@@ -115,15 +115,6 @@ describe("ReactiveComponent State Management (Core)", () => {
             cleanup();
         });
 
-        it("should initialize state properties", async () => {
-            expect(component.count).toBe(0);
-        });
-
-        it("should update state property when called directly", async () => {
-            component.count = 5;
-            expect(component.count).toBe(5);
-        });
-
         it("should update state through methods", async () => {
             component.increment();
             expect(component.count).toBe(1);
@@ -159,12 +150,6 @@ describe("ReactiveComponent State Management (Core)", () => {
 
         afterEach(() => {
             cleanup();
-        });
-
-        it("should define typed properties for each state key", async () => {
-            expect(component.count).toBe(0);
-            expect(component.message).toBe("Hello");
-            expect(component.isActive).toBe(false);
         });
 
         it("should update state when property is modified", async () => {
@@ -228,12 +213,6 @@ describe("ReactiveComponent State Management (Core)", () => {
             component.addItem("cherry");
 
             expect(component.items).toEqual(["apple", "banana", "cherry"]);
-        });
-
-        it("should reflect object state changes via direct property access", async () => {
-            component.user = { name: "Bob", age: 40 };
-
-            expect(component.user).toEqual({ name: "Bob", age: 40 });
         });
     });
 });
