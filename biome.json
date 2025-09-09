@@ -1,8 +1,6 @@
 {
     "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-    "organizeImports": {
-        "enabled": true
-    },
+    "assist": { "actions": { "source": { "organizeImports": "on" } } },
     "linter": {
         "enabled": true,
         "rules": {
@@ -13,7 +11,7 @@
         }
     },
     "files": {
-        "ignore": ["templates"]
+        "includes": ["**", "!**/templates"]
     },
     "formatter": {
         "enabled": true,
@@ -21,6 +19,6 @@
         "indentStyle": "space",
         "indentWidth": 4,
         "lineWidth": 140,
-        "ignore": []
+        "includes": ["**"]
     }
 }
