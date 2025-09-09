@@ -26,10 +26,10 @@ global.requestAnimationFrame = (callback: FrameRequestCallback): number => {
 // Mock MutationObserver if not available in test environment
 if (!window.MutationObserver) {
     window.MutationObserver = class MutationObserver {
-        // biome-ignore lint/complexity/noUselessConstructor: <explanation>
-        constructor(callback: MutationCallback) {}
+        // biome-ignore lint/complexity/noUselessConstructor: Required for mocking MutationObserver in test environment
+        constructor(_callback: MutationCallback) {}
         disconnect() {}
-        observe(target: Node, options?: MutationObserverInit) {}
+        observe(_target: Node, _options?: MutationObserverInit) {}
         takeRecords(): MutationRecord[] {
             return [];
         }
@@ -44,7 +44,7 @@ if (!window.CustomEvent) {
             super(type, eventInitDict);
             this.detail = eventInitDict?.detail as T;
         }
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        // biome-ignore lint/suspicious/noExplicitAny: Suppress because we need to cast to any for mocking CustomEvent in the test environment
     } as any;
 }
 

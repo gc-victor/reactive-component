@@ -1,8 +1,5 @@
+import { captureConsoleOutput, createComponent, TestReactiveComponent } from "@tests/utils/test-helpers";
 import { describe, expect, it } from "vitest";
-
-import { ReactiveComponent } from "@/index";
-import { captureConsoleOutput, createComponent, simulateCheck, simulateInput } from "@tests/utils/test-helpers";
-import { TestReactiveComponent } from "@tests/utils/test-helpers";
 
 describe("ReactiveComponent Event Bindings", () => {
     describe("Event Bindings", () => {

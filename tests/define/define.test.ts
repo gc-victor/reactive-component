@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { type Context, type Element, type Definition, define } from "../../src/define.js";
+import { type Context, type Definition, define, type Element } from "../../src/define.js";
 import { createFixture, simulateCheck, simulateEvent, simulateInput } from "../utils/test-helpers.js";
 
 describe("Define", () => {

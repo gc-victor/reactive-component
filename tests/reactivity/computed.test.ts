@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TestReactiveComponent, createComponent } from "../utils/test-helpers";
+import { createComponent, TestReactiveComponent } from "../utils/test-helpers";
 
 describe("ReactiveComponent Computed Properties", () => {
     describe("Basic Computed Properties", () => {

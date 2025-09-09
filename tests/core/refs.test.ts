@@ -1,5 +1,4 @@
-import { ReactiveComponent } from "@/index";
-import { TestReactiveComponent, captureConsoleOutput, createComponent } from "@tests/utils/test-helpers";
+import { captureConsoleOutput, createComponent, TestReactiveComponent } from "@tests/utils/test-helpers";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("ReactiveComponent $ref Management (Core)", () => {

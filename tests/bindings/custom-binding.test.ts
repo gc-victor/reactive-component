@@ -1,6 +1,6 @@
-import { ReactiveComponent, type StateValue } from "@/index";
-import { TestReactiveComponent, createComponent } from "@tests/utils/test-helpers";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createComponent, TestReactiveComponent } from "@tests/utils/test-helpers";
+import { describe, expect, it } from "vitest";
+import type { StateValue } from "@/index";
 
 describe("ReactiveComponent Custom Binding Handlers", () => {
     class CustomBindingComponent extends TestReactiveComponent {

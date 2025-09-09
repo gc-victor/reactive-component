@@ -1,4 +1,4 @@
-import { TestReactiveComponent, createComponent } from "@tests/utils/test-helpers";
+import { createComponent, TestReactiveComponent } from "@tests/utils/test-helpers";
 import { describe, expect, it } from "vitest";
 
 describe("ReactiveComponent Disabled Binding", () => {

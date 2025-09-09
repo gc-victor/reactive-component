@@ -94,7 +94,7 @@ export function createComponent<T extends ReactiveComponent>(
     }
 
     // Initialize collections if not already done
-    if (!Object.prototype.hasOwnProperty.call(component, "state")) {
+    if (!Object.hasOwn(component, "state")) {
         Object.assign(component, {
             state: new Map(),
             derived: new Map(),

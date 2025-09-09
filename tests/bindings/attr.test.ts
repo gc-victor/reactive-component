@@ -1,6 +1,5 @@
-import { ReactiveComponent } from "@/index";
-import { TestReactiveComponent, captureConsoleOutput, createComponent, simulateCheck, simulateInput } from "@tests/utils/test-helpers";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { captureConsoleOutput, createComponent, TestReactiveComponent } from "@tests/utils/test-helpers";
+import { describe, expect, it } from "vitest";
 
 describe("ReactiveComponent Attribute Bindings", () => {
     describe("$bind-attr Handling", () => {

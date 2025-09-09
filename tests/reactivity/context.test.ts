@@ -1,7 +1,7 @@
-import { ReactiveComponent, createContext } from "@/index";
-import type { Context } from "@/index";
-import { TestReactiveComponent, captureConsoleOutput, createComponent } from "@tests/utils/test-helpers";
+import { captureConsoleOutput, createComponent, TestReactiveComponent } from "@tests/utils/test-helpers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Context } from "@/index";
+import { createContext } from "@/index";
 
 const TestContext = createContext("test-context");
 const AltContext = createContext("alt-context");
@@ -213,7 +213,6 @@ customElements.define("test-provider", ProviderComponent);
 
 class NestedConsumerComponent extends TestReactiveComponent {
     contextLevel!: number;
-    private providerFound = false;
 
     constructor() {
         super();
@@ -463,7 +462,7 @@ describe("ReactiveComponent Context API", () => {
 
     describe("Context Exposure Basics", () => {
         let provider: ContextExposureProvider;
-        let consumer: ContextExposureConsumer;
+        let _consumer: ContextExposureConsumer;
         let cleanup: () => void;
 
         beforeEach(() => {
@@ -474,7 +473,7 @@ describe("ReactiveComponent Context API", () => {
             );
 
             provider = result.component;
-            consumer = provider.querySelector("test-context-exposure-consumer") as ContextExposureConsumer;
+            _consumer = provider.querySelector("test-context-exposure-consumer") as ContextExposureConsumer;
             cleanup = result.cleanup;
         });
 
@@ -579,7 +578,7 @@ describe("ReactiveComponent Context API", () => {
 
             const computedConsumer = computedProvider.querySelector("test-computed-context-consumer") as ComputedContextConsumer;
 
-            const customEvent = new CustomEvent("reactive-component-context-computed-context", {
+            const _customEvent = new CustomEvent("reactive-component-context-computed-context", {
                 bubbles: true,
                 composed: true,
                 detail: {
