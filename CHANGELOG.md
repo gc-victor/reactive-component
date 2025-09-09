@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-09-09
+
+### 🚀 Features
+
+- *(define)* Add function-based component API
+- *(examples)* Add examples workspace
+
+### 🚜 Refactor
+
+- *(testing)* Tests refinement and coverage strategy
+- *(core)* Minor cleanups and linter fixes in core
+- *(define)* Remove observedAttributes override from function-based component class
+
+### 📚 Documentation
+
+- Update changelog
+- *(agents)* Add project guidelines and workflow manual
+- *(readme)* Document define API and examples
+- *(define)* Remove static attrs guidance from define API
+
+### 🎨 Styling
+
+- *(biome)* Update configuration to latest schema
+- *(biome)* Adjust includes to ignore declaration files
+
+### 🧪 Testing
+
+- *(define)* Add comprehensive tests for define API
+- Clean up imports and mocks across suite to satisfy Biome
+
+### ⚙️ Miscellaneous Tasks
+
+- *(ci)* Remove GitHub Actions workflows
+- *(query)* Remove Query config and server/pages code
+- *(assets)* Remove cached public webfonts
+- *(release)* Revamp Makefile release workflow
+- *(types)* Prefer type-only imports in d.ts and annotate $state proxy
+- *(lint)* Include tests directory in Biome check scripts
+- *(types)* Align d.ts imports; drop obsolete lint suppression
+
+### Build
+
+- Update release targets
+- *(esbuild)* Configure bundling and ESM exports
+- Stop tracking dist artifact
+- Remove .npmignore
+
 ## [0.3.0] - 2025-05-20
 
 ### 🚀 Features
