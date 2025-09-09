@@ -11,7 +11,7 @@
         }
     },
     "files": {
-        "includes": ["**", "!**/templates"]
+        "includes": ["**", "!src/*.d.ts"]
     },
     "formatter": {
         "enabled": true,
