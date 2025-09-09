@@ -272,9 +272,6 @@ export function define(name: string, definition: Definition): CustomElementConst
     // Create a new class for this specific component
     class ComponentClass extends Define {
         static override __definition = definition;
-        static get observedAttributes(): string[] {
-            return (definition as any).attrs ?? [];
-        }
     }
 
     // Register the custom element
