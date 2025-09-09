@@ -36,8 +36,6 @@ const CLASS_LIST_TOGGLE = "toggle";
 
 // Attribute Names
 const ATTRIBUTE_CLASS = "class";
-const ATTRIBUTE_NAME = "name";
-const ATTRIBUTE_TYPE = "type";
 
 // Console Warnings/Errors
 const WARN_CONTEXT_NOT_FOUND = (key: string) => `Cannot expose context "${key}": state or computed value not found`;
@@ -711,7 +709,7 @@ export class ReactiveComponent extends HTMLElement {
                 if (Array.isArray(parsed) || typeof parsed === "object") {
                     return parsed;
                 }
-            } catch (e) {
+            } catch (_e) {
                 // If parsing fails, return original string
                 return value;
             }
@@ -1012,6 +1010,11 @@ export class ReactiveComponent extends HTMLElement {
     }): Record<string, () => void> {
         // Default implementation returns empty object
         // Child classes can override this to add custom handlers
+        // parameters intentionally referenced to satisfy linter without suppression
+        void stateKey;
+        void element;
+        void formattedValue;
+        void rawValue;
         return {};
     }
 
