@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+/* Firefox */
+* {
+    scrollbar-width: auto;
+    scrollbar-color: var(--scrollbar-color-secondary) var(--scrollbar-color-primary);
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+    width: 15px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--scrollbar-color-primary);
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-color-secondary);
+    border-radius: 14px;
+    border: 3px solid var(--scrollbar-color-primary);
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Webfonts */
+
+@font-face {
+    font-family: "Cal Sans";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 800;
+    src: url("../assets/webfonts/CalSans-SemiBold.woff2") format("woff2"),
+        url("../assets/webfonts/CalSans-SemiBold.woff") format("woff"),
+        url("../assets/webfonts/CalSans-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Red Hat Text";
+    font-style: normal;
+    font-display: optional;
+    font-weight: 400;
+    src: url("../assets/webfonts/RedHatText-Regular.ttf") format("truetype");
+}
+
+body {
+    font-family: "Red Hat Text", sans-serif;
+}
+
+.font-cal {
+    letter-spacing: 0.025em;
+    font-family: "Cal Sans", sans-serif;
+}

@@ -1,0 +1,20 @@
+{
+    "name": "examples",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "sxo dev",
+        "build": "sxo build",
+        "start": "sxo start",
+        "tailwind": "tailwindcss -i src/styles/tailwind.css -o src/pages/global.css"
+    },
+    "dependencies": {
+        "sxo": "latest"
+    },
+    "devDependencies": {
+        "@tailwindcss/cli": "^4.1.13",
+        "tailwindcss": "^4.1.13",
+        "typescript": "^5.9.2"
+    }
+}
