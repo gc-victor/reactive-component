@@ -22,31 +22,50 @@
     "main": "dist/index.js",
     "source": "src/index.ts",
     "types": "src/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./src/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./define": {
+            "types": "./src/define.d.ts",
+            "import": "./dist/define.js"
+        }
+    },
+    "files": [
+        "dist/index.js",
+        "dist/define.js",
+        "src/index.d.ts",
+        "src/define.d.ts",
+        "README.md",
+        "CHANGELOG.md",
+        "LICENSE",
+        "package.json"
+    ],
     "scripts": {
-        "dev": "query dev",
-        "setup": "query asset public",
-        "build": "make bundle",
+        "build": "npm run build:types && npm run bundle:esbuild",
+        "build:types": "npx -p typescript tsc ./src/index.ts ./src/define.ts --module NodeNext --moduleResolution NodeNext --declaration --emitDeclarationOnly --strict --esModuleInterop --skipLibCheck --forceConsistentCasingInFileNames",
+        "bundle:esbuild": "node esbuild.config.js",
+        "examples": "cd examples && pnpm dev",
+        "check": "biome check ./src",
+        "check:fix": "biome check --write --unsafe ./src",
         "test": "vitest run tests/",
         "test:watch": "vitest --watch",
         "test:coverage": "vitest run tests/ --coverage",
         "test:coverage:watch": "vitest --coverage"
     },
     "dependencies": {
-        "alien-signals": "^2.0.5"
+        "alien-signals": "^2.0.7"
     },
     "devDependencies": {
-        "@biomejs/biome": "~1.9.4",
-        "@qery/query": "~0.12.49",
-        "@qery/query-server": "~0.12.49",
-        "@tailwindcss/cli": "^4.1.7",
-        "@vitest/browser": "^3.1.3",
-        "@vitest/coverage-v8": "^3.1.3",
-        "@vitest/ui": "^3.1.3",
-        "esbuild": "0.25.4",
-        "happy-dom": "^17.4.7",
-        "tailwindcss": "^4.1.7",
-        "typescript": "~5.8.3",
+        "@biomejs/biome": "~2.2.3",
+        "@vitest/browser": "^3.2.4",
+        "@vitest/coverage-v8": "^3.2.4",
+        "@vitest/ui": "^3.2.4",
+        "esbuild": "0.25.9",
+        "happy-dom": "^18.0.1",
+        "typescript": "~5.9.2",
         "update-browserslist-db": "^1.1.3",
-        "vitest": "^3.1.3"
+        "vitest": "^3.2.4"
     }
 }
