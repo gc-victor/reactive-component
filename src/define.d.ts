@@ -1,4 +1,4 @@
-import type { ReactiveComponent, StateValue } from "./index.js";
+import { ReactiveComponent, type StateValue } from "./index.js";
 /**
  * A ReactiveComponent with public access to protected methods for define API
  */
@@ -13,7 +13,6 @@ export type Element = ReactiveComponent & {
 /**
  * State proxy type with property-only API
  */
-// biome-ignore lint/suspicious/noExplicitAny: $state is a proxy for any property.
 export type State = Record<string, any>;
 /**
  * Bind proxy type for method binding

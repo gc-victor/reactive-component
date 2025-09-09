@@ -407,12 +407,7 @@ export declare class ReactiveComponent extends HTMLElement {
      * ```
      * @protected
      */
-    protected customBindingHandlers({
-        stateKey,
-        element,
-        formattedValue,
-        rawValue,
-    }: {
+    protected customBindingHandlers({ stateKey, element, formattedValue, rawValue, }: {
         stateKey?: string;
         element?: HTMLElement;
         formattedValue?: string;
