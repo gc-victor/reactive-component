@@ -788,7 +788,6 @@ define(
 Details:
 
 - `return { connected, disconnected, adopted, attributeChanged }` is optional.
-- To observe attributes, set a static `attrs` array on the definition function.
 - `attributeChanged(name, oldValue, newValue)` fires when an observed attribute changes.
 
 ### Interop and When to Use define()
@@ -815,7 +814,6 @@ Details:
 Definition:
 
 - `interface Definition`
-  - Optional static: `attrs?: string[]`
   - Call signature: `(this: Element, context: Context) => unknown`
   - Can return `Partial<LifecycleMethods>`:
     - `{ connected?, disconnected?, adopted?, attributeChanged?(name, oldValue, newValue) }`

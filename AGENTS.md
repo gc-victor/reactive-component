@@ -402,8 +402,6 @@ The definition can return lifecycle hooks:
 
 - `connected()`, `disconnected()`, `adopted()`, `attributeChanged(name, oldValue, newValue)`
 
-To observe attributes, set a static `attrs: string[]` on the definition function (e.g., `MyDef.attrs = ["label"]`).
-
 ### Interop and When to Use
 
 - Works alongside class-based components; both use the same reactive engine.
