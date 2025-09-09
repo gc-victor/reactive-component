@@ -20,7 +20,9 @@ In summary, Reactive Component offers reactive state management and declarative 
 
 ## Credits
 
-[Hawk Ticehurst's](https://github.com/hawkticehurst) work on [Stellar](https://github.com/hawkticehurst/stellar) and his article ['Declarative Signals'](https://hawkticehurst.com/2024/12/declarative-signals/) inspired this library.
+- [Hawk Ticehurst's](https://github.com/hawkticehurst) work on [Stellar](https://github.com/hawkticehurst/stellar) and his article ['Declarative Signals'](https://hawkticehurst.com/2024/12/declarative-signals/) inspired this library.
+
+- [Ginger](https://github.com/gingerchew) for the article ['Functional custom elements the easy way'](https://piccalil.li/blog/functional-custom-elements-the-easy-way/), which inspired the `define` functionality.
 
 ## Installation
 
@@ -762,21 +764,18 @@ All methods are safe to call during definition execution.
 You can return lifecycle hooks from your `definition`:
 
 ```typescript
-define(
-  "rc-lifecycle",
-  function WithLifecycle({ $state }) {
-    $state.label = "Hello";
+define("rc-lifecycle", function WithLifecycle({ $state }) {
+  $state.label = "Hello";
 
-    return {
-      connected: () => console.log("connected"),
-      disconnected: () => console.log("disconnected"),
-      adopted: () => console.log("adopted"),
-      attributeChanged: (name, oldValue, newValue) => {
-        if (name === "label" && newValue != null) $state.label = newValue;
-      },
-    };
-  }
-);
+  return {
+    connected: () => console.log("connected"),
+    disconnected: () => console.log("disconnected"),
+    adopted: () => console.log("adopted"),
+    attributeChanged: (name, oldValue, newValue) => {
+      if (name === "label" && newValue != null) $state.label = newValue;
+    },
+  };
+});
 ```
 
 ```html
