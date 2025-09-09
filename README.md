@@ -8,15 +8,15 @@ In summary, Reactive Component offers reactive state management and declarative 
 
 ## Features
 
-- **Reactive:** Automatically update the DOM when the state changes.
-- **Computed:** Instantly refresh derived values.
-- **Declarative Binding:** Keep UI and data in sync with minimal code.
-- **Zero Build:** Use plain HTML and Custom Elements, no bundlers needed.
-- **Progressive Enhancement:** Boost SEO, speed up initial loads, and simplify maintenance.
-- **High Performance:** Direct DOM updates in a ~3.5KB gzipped package.
-- **TypeScript:** Benefit from type safety and smarter tooling.
-- **Framework Agnostic:** Easily integrate with other libraries or legacy systems.
-- **Context API:** Share state between components in a clean, React-like way.
+- Reactive: Automatically update the DOM when the state changes.
+- Computed: Instantly refresh derived values.
+- Declarative Binding: Keep UI and data in sync with minimal code.
+- Zero Build: Use plain HTML and Custom Elements, no bundlers needed.
+- Progressive Enhancement: Boost SEO, speed up initial loads, and simplify maintenance.
+- High Performance: Direct DOM updates in a ~3.5KB gzipped package.
+- TypeScript: Benefit from type safety and smarter tooling.
+- Framework Agnostic: Easily integrate with other libraries or legacy systems.
+- Context API: Share state between components in a clean, React-like way.
 
 ## Credits
 
@@ -42,18 +42,16 @@ Let's start with a simple counter component that demonstrates several core react
 
 ### Key Features Demonstrated:
 
-1. **Automatic State Management**
-
+1. Automatic State Management
    - The `count` property is automatically tracked and managed
    - No explicit state initialization is required
    - Changes trigger efficient DOM updates
 
-2. **Method Auto-binding**
-
+2. Method Auto-binding
    - Component methods are automatically bound to the instance
    - Clean event handler syntax
 
-3. **Two-way Data Binding**
+3. Two-way Data Binding
    - The `$state` directive creates bidirectional binding
    - DOM updates when state changes
    - State updates when DOM changes
@@ -87,45 +85,41 @@ customElements.define("basic-counter", BasicCounter);
 
 ### Implementation Details:
 
-1. **State Declaration**
-
+1. State Declaration
    - Type inference automatically handles number type
    - Initial value of 0 is set and reflected in DOM
 
-2. **Method Implementation**
-
+2. Method Implementation
    - `increment()` and `decrement()` directly modify state
    - Proxy handlers convert property access to state updates
    - Changes automatically trigger view updates
 
-3. **Template Structure**
+3. Template Structure
    - `$state="count"` creates two-way binding for the counter
    - `onclick` handlers map directly to component methods
    - Tailwind classes provide styling without extra CSS
 
 ## Core Concepts
 
-1. **State Management** - Reactive state that automatically updates the UI
-2. **Computed Properties** - Derived values that update when dependencies change
-3. **Context API** - Share state between components without prop drilling
+1. State Management - Reactive state that automatically updates the UI
+2. Computed Properties - Derived values that update when dependencies change
+3. Context API - Share state between components without prop drilling
 
 ### State Management
 
 The component uses a sophisticated signal-based reactive system for efficient state management that provides several powerful features:
 
-1. **Declarative State Initialization**
-
+1. Declarative State Initialization
    - States are initialized using `setState()` with automatic type inference
    - Values can be primitives, objects, or complex data structures
    - State changes trigger efficient, granular re-renders
 
-2. **Computed Properties with Auto-Tracking**
-
+2. Computed Properties with Auto-Tracking
    - Derived values update automatically when dependencies change
    - Smart caching prevents unnecessary recalculations
    - Dependencies are tracked without explicit declarations
 
-3. **Two-Way Data Binding**
+3. Two-Way Data Binding
    - State changes automatically sync with the DOM
    - DOM events update state seamlessly
    - No manual DOM manipulation is needed
@@ -169,19 +163,17 @@ Key Features Demonstrated:
 
 Computed properties are a powerful feature that enables you to create derived state values that automatically update based on changes to their dependencies. This reactive computation system provides several key benefits:
 
-1. **Automatic Dependency Tracking**
-
+1. Automatic Dependency Tracking
    - The system intelligently tracks dependencies between state values
    - Only recomputes when dependent values change
    - Eliminates unnecessary calculations and improves performance
 
-2. **Smart Caching**
-
+2. Smart Caching
    - Computed values are cached until dependencies change
    - Prevents recalculating the same value multiple times
    - Optimizes memory usage and computation time
 
-3. **Declarative Data Flow**
+3. Declarative Data Flow
    - Define transformations as pure functions
    - Dependencies are automatically managed
    - Results update seamlessly when source data changes
@@ -235,19 +227,17 @@ Key Features Demonstrated:
 
 Element references provide direct, type-safe access to DOM elements in your components. This feature enables efficient manipulation of DOM elements while maintaining reactivity and encapsulation.
 
-1. **Type-Safe Element Access**
-
+1. Type-Safe Element Access
    - Direct access to DOM elements through the `refs` object
    - Automatic type inference for element properties
    - Compile-time checking for element existence
 
-2. **Ref Registration**
-
+2. Ref Registration
    - Elements marked with `$ref` attribute are automatically registered
    - References are available immediately after component mounting
    - Clean separation between template and logic
 
-3. **Reactive Integration**
+3. Reactive Integration
    - Refs work seamlessly with reactive state
    - Changes through refs trigger appropriate updates
    - Maintains the component's reactive nature
@@ -308,19 +298,17 @@ Key Features Demonstrated:
 
 The JSON State Management feature provides sophisticated handling of complex data structures with automatic serialization and reactive updates. Here's a detailed breakdown of its capabilities:
 
-1. **Automated JSON Serialization**
-
+1. Automated JSON Serialization
    - Automatic conversion between JS objects and JSON
    - Pretty-printing with proper indentation
    - Type-safe serialization of complex nested structures
 
-2. **Deep Reactivity**
-
+2. Deep Reactivity
    - Changes to nested properties trigger updates
    - Computed properties track deep dependencies
    - Metadata automatically updates on state changes
 
-3. **Form Integration**
+3. Form Integration
    - Two-way binding with form inputs
    - Real-time validation and feedback
    - Automatic type coercion for form fields
@@ -397,20 +385,17 @@ Key Features Demonstrated:
 
 Context provides a way to share values between components without having to explicitly pass a prop through every level of the component tree. This feature is particularly useful for sharing global state such as themes, user data, or application configuration.
 
-1. **Creating Context**
-
+1. Creating Context
    - Define shared state using the `createContext` function
    - Provide a state key for storage and an optional debug name
    - Context is identified by a unique symbol to prevent collisions
 
-2. **Exposing Context**
-
+2. Exposing Context
    - Provider components expose context using `exposeContext(context)`
    - State changes in provider components automatically update consumers
    - Multiple contexts can be exposed from a single component
 
-3. **Consuming Context**
-
+3. Consuming Context
    - Child components consume context using `consumeContext(context)`
    - Consumed context is automatically synchronized with provider updates
    - Components can consume multiple contexts from different providers
@@ -419,57 +404,59 @@ Here's an example of a theme context system:
 
 ```typescript
 // Define context and provider component
-const themeContext = createContext('theme');
+const themeContext = createContext("theme");
 
 class ThemeProvider extends ReactiveComponent {
   constructor() {
     super();
     // Initialize state
-    this.setState('theme', {
-      mode: 'light',
-      background: 'bg-slate-200',
-      text: 'text-slate-900'
+    this.setState("theme", {
+      mode: "light",
+      background: "bg-slate-200",
+      text: "text-slate-900",
     });
-    
+
     // Expose the theme context
     this.exposeContext(themeContext);
   }
-  
+
   toggleTheme() {
-    const currentTheme = this.getState('theme');
+    const currentTheme = this.getState("theme");
     // Toggle between light and dark mode
-    this.setState('theme', currentTheme.mode === 'light' 
-      ? { mode: 'dark', background: 'bg-slate-900', text: 'text-slate-50' }
-      : { mode: 'light', background: 'bg-slate-200', text: 'text-slate-900' }
+    this.setState(
+      "theme",
+      currentTheme.mode === "light"
+        ? { mode: "dark", background: "bg-slate-900", text: "text-slate-50" }
+        : { mode: "light", background: "bg-slate-200", text: "text-slate-900" },
     );
   }
 }
-customElements.define('theme-provider', ThemeProvider);
+customElements.define("theme-provider", ThemeProvider);
 
 // Consumer component
 class ThemeConsumer extends ReactiveComponent {
   constructor() {
     super();
-    
+
     // Consume the theme context
     this.consumeContext(themeContext);
-    
+
     // Create computed properties based on the theme
-    this.compute('themeMode', [themeContext.state], (theme) => `ThemeMode: ${theme.mode}`);
+    this.compute("themeMode", [themeContext.state], (theme) => `ThemeMode: ${theme.mode}`);
   }
-  
+
   connectedCallback() {
     super.connectedCallback();
-    
+
     // React to theme changes
     this.effect(() => {
-      const theme = this.getState('theme');
+      const theme = this.getState("theme");
       this.classList.add(theme.background, theme.text);
       this.refs.themeInfo.textContent = `Current Theme: ${theme.mode}`;
     });
   }
 }
-customElements.define('theme-consumer', ThemeConsumer);
+customElements.define("theme-consumer", ThemeConsumer);
 ```
 
 ```html
@@ -483,6 +470,7 @@ customElements.define('theme-consumer', ThemeConsumer);
 ```
 
 Key Features Demonstrated:
+
 - Clean provider/consumer pattern for shared state
 - Automatic propagation of state changes
 - Type-safe context consumption
@@ -494,21 +482,19 @@ Key Features Demonstrated:
 
 Form handling in ReactiveComponent provides sophisticated validation, state management, and real-time feedback capabilities. Here's a detailed breakdown of its features:
 
-1. **Reactive Form State Management**
-
+1. Reactive Form State Management
    - Automatic two-way data binding for form inputs
    - Real-time validation and error handling
    - Dynamic enable/disable functionality
    - Status tracking and feedback
 
-2. **Smart Validation System**
-
+2. Smart Validation System
    - Built-in validation rules and custom validators
    - Real-time validation feedback
    - Computed validation states
    - Error message management
 
-3. **Accessibility Integration**
+3. Accessibility Integration
    - Keyboard navigation support
    - Screen reader-friendly status messages
    - Focus management
@@ -585,19 +571,17 @@ Key Features Demonstrated:
 
 Custom binding handlers allow you to extend the component's binding capabilities with your own custom logic. This powerful feature enables specialized DOM updates based on state changes.
 
-1. **Handler Definition**
-
+1. Handler Definition
    - Register custom handlers by overriding `customBindingHandlers`
    - Return mapping of binding types to handler functions
    - Access element and value details for fine-grained control
 
-2. **Handler Execution**
-
+2. Handler Execution
    - Automatically called when bound state changes
    - Receives formatted and raw state values
    - Full access to elements for direct DOM manipulation
 
-3. **Integration with State System**
+3. Integration with State System
    - Works seamlessly with reactive state management
    - Handlers are reactive and update automatically
    - Clean integration with the existing binding system
@@ -698,7 +682,159 @@ Key Features Demonstrated:
 - Reactive updates without manual event handling
 - Accessibility considerations in custom bindings
 
+## Function-based Components with define()
+
+In addition to class-based components, Reactive Component supports concise function-based components via `define(name, definition)`. This style keeps logic close to the HTML and offers a minimal API through a context object.
+
+- HTML-first remains the rule: structure and user-visible text live in HTML.
+- All state and behavior are managed through the `define()` context.
+- Ideal for small/mid components and rapid prototyping.
+
+### Basic Usage
+
+```typescript
+define("rc-counter", function Counter({ $state, $bind, $effect, $compute, $ref }) {
+  // Initialize state (property-only API)
+  $state.count = 0;
+
+  // Bind methods as event handlers (auto-bound to the element)
+  $bind.increment = () => {
+    $state.count = ($state.count as number) + 1;
+  };
+
+  // Computed values
+  $compute("doubleCount", ["count"], (count) => (count as number) * 2);
+
+  // Effects
+  $effect(() => {
+    console.log("Count changed:", $state.count);
+  });
+
+  // Refs
+  $bind.focusInput = () => {
+    const input = $ref("countInput");
+    input?.focus();
+  };
+
+  // Optional lifecycle hooks
+  return {
+    connected: () => console.log("Counter connected!"),
+  };
+});
+```
+
+```html
+<rc-counter>
+  <p>Count: <span $state="count">0</span></p>
+  <p>Double: <span $bind-text="doubleCount"></span></p>
+  <input $ref="countInput" type="number" $bind-value="count" />
+  <button onclick="increment">Increment</button>
+  <button onclick="focusInput">Focus Input</button>
+</rc-counter>
+```
+
+Notes:
+
+- Event handlers reference `$bind`ed methods by name via `onclick="methodName"`.
+- Use `$state.someKey` to read/write state. The binding attributes must use alphanumeric keys.
+
+### Context API
+
+Inside the definition function you receive a single `context` object:
+
+- `$element`: The component instance. Extends ReactiveComponent with public wrappers:
+  - `setState(key, value)`, `getState(key)`, `compute(key, deps, fn)`, `effect(fn)`, `refs`
+- `$state`: Property-only state API exposed via Proxy
+  - Read: `const v = $state.key`
+  - Write: `$state.key = next`
+  - Tracks keys that are actually used in bindings and computed values
+- `$compute(key, sources, computation)`: Define a derived state value
+- `$effect(callback)`: Register an effect; returns a cleanup function
+- `$ref(name)`: Access elements registered via `$ref` attributes
+- `$bind`: Bind functions onto the component instance
+  - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
+  - Use in HTML: `onclick="methodName"`
+
+All methods are safe to call during definition execution.
+
+### Lifecycle
+
+You can return lifecycle hooks from your `definition`:
+
+```typescript
+define(
+  "rc-lifecycle",
+  function WithLifecycle({ $state }) {
+    $state.label = "Hello";
+
+    return {
+      connected: () => console.log("connected"),
+      disconnected: () => console.log("disconnected"),
+      adopted: () => console.log("adopted"),
+      attributeChanged: (name, oldValue, newValue) => {
+        if (name === "label" && newValue != null) $state.label = newValue;
+      },
+    };
+  }
+);
+```
+
+```html
+<rc-lifecycle label="Welcome">
+  <span $bind-text="label"></span>
+</rc-lifecycle>
+```
+
+Details:
+
+- `return { connected, disconnected, adopted, attributeChanged }` is optional.
+- To observe attributes, set a static `attrs` array on the definition function.
+- `attributeChanged(name, oldValue, newValue)` fires when an observed attribute changes.
+
+### Interop and When to Use define()
+
+- Works alongside class-based components; both use the same reactive engine.
+- Choose `define()` for:
+  - Small components
+  - Components without inheritance needs
+  - Co-locating simple setup logic with HTML
+- Choose class-based for:
+  - Advanced inheritance / mixins
+  - Overriding `customBindingHandlers`
+  - Complex lifecycles or custom element internals
+- Global availability: when running in a browser, `window.define` is set for script-based usage.
+
 ## API Reference
+
+### Function-based define API
+
+- `define(name: string, definition: Definition): typeof HTMLElement`
+  - Registers a custom element using the function-based API.
+  - Returns the custom element constructor.
+
+Definition:
+
+- `interface Definition`
+  - Optional static: `attrs?: string[]`
+  - Call signature: `(this: Element, context: Context) => unknown`
+  - Can return `Partial<LifecycleMethods>`:
+    - `{ connected?, disconnected?, adopted?, attributeChanged?(name, oldValue, newValue) }`
+
+Context:
+
+- `$element: Element` — The element instance with public wrappers:
+  - `setState(key, value)`, `getState(key)`, `compute(key, deps, fn)`, `effect(fn)`, `refs`
+- `$state: Record<string, any>` — Property-only state API (Proxy)
+- `$compute(key: string, sources: string[], computation: (...args) => StateValue): void`
+- `$effect(callback: () => void): () => void`
+- `$ref(name: string): HTMLElement | undefined`
+- `$bind: Record<string, ((...args: unknown[]) => unknown) | undefined>`
+  - Assign functions to add methods onto the element instance
+
+Notes:
+
+- Binding constraints apply: binding attribute values must be alphanumeric (no expressions).
+- All user-visible text should live in HTML templates.
 
 ### Component Lifecycle
 
@@ -724,27 +860,24 @@ Key Features Demonstrated:
 
 Processes an element's attributes for special bindings and state declarations. This method is responsible for:
 
-1. **Reference Processing**
-
+1. Reference Processing
    - Handles `$ref` attributes to create element references
    - Populates the component's `refs` object
    - Automatically removes ref attributes after processing
 
-2. **State Declaration Processing**
-
+2. State Declaration Processing
    - Process `$state` attributes for direct state declarations
    - Extracts initial values from element content
    - Establishes state-to-element bindings
    - Removes state declaration attributes
 
-3. **Binding Setup**
-
+3. Binding Setup
    - Handles `$bind-*` attributes for two-way data binding
    - Establishes appropriate event listeners for form elements
    - Sets up validation and type coercion
    - Removes binding attributes after setup
 
-4. **Event Handler Registration**
+4. Event Handler Registration
    - Process `on*` event handler attributes
    - Binds event handlers to component methods
    - Provides event context to handler functions
@@ -768,17 +901,17 @@ ReactiveComponent includes a structured system prompt (`system_prompt.xml`) that
 
 ### Key Benefits
 
-1. **Structured Development Process**
+1. Structured Development Process
    - Standardized component creation workflow
    - Built-in validation steps
    - Best practices enforcement
 
-2. **Quality Assurance**
+2. Quality Assurance
    - Accessibility compliance checks
    - Performance optimization guidelines
    - Code quality standards
 
-3. **Automated Guidance**
+3. Automated Guidance
    - Component architecture recommendations
    - State management patterns
    - Error handling strategies
@@ -888,25 +1021,25 @@ export async function handleRequest(req: Request): Promise<Response> {
 
 ### Key Integration Points
 
-1. **Initial Render**
+1. Initial Render
 
 - Server generates complete HTML document
 - Web Components are defined in included scripts
 - No hydration needed
 
-2. **State Management**
+2. State Management
 
 - Initial state can be embedded in HTML attributes
 - Web Components handle their own state after initialization
 - No explicit hydration or state reconciliation is required
 
-3. **APIs and Data Flow**
+3. APIs and Data Flow
 
 - Query functions handle API requests
 - Web Components can fetch data through standard APIs
 - Database access is controlled through Query's server functions
 
-4. **Runtime Behavior**
+4. Runtime Behavior
 
 - Server provides initial HTML and required scripts
 - Web Components take over client-side functionality
@@ -914,8 +1047,8 @@ export async function handleRequest(req: Request): Promise<Response> {
 
 ### References
 
-- [Query Website](https://qery.io)
-- [Query - GitHub](https://github.com/gc-victor/query)
+- Query Website: https://qery.io
+- Query - GitHub: https://github.com/gc-victor/query
 
 ## Contributing
 
