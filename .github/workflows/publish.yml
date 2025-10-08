@@ -1,9 +1,12 @@
 name: Publish to npm
-permissions: {}
+
 on:
+  # Trigger: release event when a release is published
   release:
-    types:
-      - published
+    types: [published]
+
+permissions: {}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -35,9 +38,12 @@ jobs:
           package-manager-cache: false
       - run: npm ci --ignore-scripts
       - run: npm run build
-      - run: npm version $TAG_NAME --git-tag-version=false
-        env:
-          TAG_NAME: ${{ github.ref_name }}
+      - name: Extract version number
+        id: version
+        run: |
+          # From release event (tag_name like "v1.0.1", strip the "v")
+          echo "value=$(echo '${{ github.event.release.tag_name }}' | sed 's/^v//')" >> $GITHUB_OUTPUT
+      - run: npm version ${{ steps.version.outputs.value }} --git-tag-version=false
       - id: pack
         run: |-
           TARBALL=$(npm pack)
@@ -63,11 +69,19 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
-      - run: npm publish --provenance --access public --tag next $TARBALL
-        if: github.event.release.prerelease
+
+      # Publish prerelease versions with 'next' tag
+      - name: Publish prerelease to npm
+        run: npm publish --provenance --access public --tag next $TARBALL
+        if: github.event.release.prerelease == true
         env:
           TARBALL: ${{ needs.build.outputs.tarball }}
-      - run: npm publish --provenance --access public $TARBALL
-        if: "!github.event.release.prerelease"
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Publish stable versions to 'latest' tag (default)
+      - name: Publish stable to npm
+        run: npm publish --provenance --access public $TARBALL
+        if: github.event.release.prerelease == false
         env:
           TARBALL: ${{ needs.build.outputs.tarball }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
