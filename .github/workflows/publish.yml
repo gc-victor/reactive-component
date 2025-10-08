@@ -1,9 +1,18 @@
 name: Publish to npm
 permissions: {}
 on:
-  release:
-    types:
-      - published
+  # Primary trigger: workflow_dispatch from release.yml
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g., 1.0.1)"
+        required: true
+        type: string
+      prerelease:
+        description: "Is this a prerelease"
+        required: true
+        type: boolean
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -35,9 +44,17 @@ jobs:
           package-manager-cache: false
       - run: npm ci --ignore-scripts
       - run: npm run build
-      - run: npm version $TAG_NAME --git-tag-version=false
-        env:
-          TAG_NAME: ${{ github.ref_name }}
+      - name: Extract version number
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            # From workflow_dispatch input (already clean version like "1.0.1")
+            echo "value=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            # From release event (ref_name like "v1.0.1", strip the "v")
+            echo "value=${{ github.ref_name }}" | sed 's/^v//' >> $GITHUB_OUTPUT
+          fi
+      - run: npm version ${{ steps.version.outputs.value }} --git-tag-version=false
       - id: pack
         run: |-
           TARBALL=$(npm pack)
@@ -64,10 +81,10 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - run: npm publish --provenance --access public --tag next $TARBALL
-        if: github.event.release.prerelease
+        if: inputs.prerelease == true || github.event.release.prerelease
         env:
           TARBALL: ${{ needs.build.outputs.tarball }}
       - run: npm publish --provenance --access public $TARBALL
-        if: "!github.event.release.prerelease"
+        if: inputs.prerelease == false || (github.event_name == 'release' && !github.event.release.prerelease)
         env:
           TARBALL: ${{ needs.build.outputs.tarball }}
