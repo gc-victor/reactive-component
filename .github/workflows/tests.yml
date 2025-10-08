@@ -2,11 +2,15 @@ name: Tests & Coverage
 
 on:
   push:
-    branches:
-      - main
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "package.json"
   pull_request:
-    branches:
-      - "**"
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "package.json"
 
 jobs:
   test-and-coverage:
