@@ -1,0 +1,192 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  # Fast guard job to decide if we should proceed with release logic
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.decide.outputs.should_release }}
+      version: ${{ steps.decide.outputs.version }}
+      reason: ${{ steps.decide.outputs.reason }}
+    steps:
+      - name: Decide whether to release (commit message gate)
+        id: decide
+        shell: bash
+        run: |
+          set -euo pipefail
+          commit_msg="${{ github.event.head_commit.message || '' }}"
+          if [[ -z "$commit_msg" ]]; then
+            echo "No commit message found on push event; skipping release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "reason=no_commit_message" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Commit message: $commit_msg"
+
+          if echo "$commit_msg" | grep -Eq '^release: v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            version=$(echo "$commit_msg" | sed -nE 's/^release: v([0-9]+\.[0-9]+\.[0-9]+)$/\1/p')
+            echo "Matched release pattern. Version: $version"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+            echo "reason=commit_message_match" >> "$GITHUB_OUTPUT"
+          else
+            echo "Commit does not match release pattern ^release: vX.Y.Z -> skipping."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "reason=pattern_not_matched" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip summary
+        if: steps.decide.outputs.should_release != 'true'
+        run: |
+          echo "Skipping release. Reason: ${{ steps.decide.outputs.reason }}"
+          echo "Guard job completed quickly."
+
+  # Main release job only runs when guard approves
+  release:
+    needs: guard
+    if: needs.guard.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      # Prevent simultaneous releases of same version
+      group: release-v${{ needs.guard.outputs.version }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout (full history for tags & changelog)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Configure git user (for tagging)
+        run: |
+          git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Ensure tag exists (create if missing)
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.guard.outputs.version }}"
+          tag="v${version}"
+          git fetch --tags --prune --force
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists."
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Creating annotated tag $tag at HEAD ($GITHUB_SHA)"
+            git tag -a "$tag" -m "release: $tag"
+            git push origin "$tag"
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine previous tag (if any)
+        id: prev
+        shell: bash
+        run: |
+          current="v${{ needs.guard.outputs.version }}"
+          if prev=$(git describe --tags --abbrev=0 "${current}^" 2>/dev/null); then
+            echo "Previous tag: $prev"
+            echo "value=$prev" >> "$GITHUB_OUTPUT"
+          else
+            echo "No previous tag found (first release)."
+            echo "value=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Derive git-cliff range
+        id: range
+        shell: bash
+        run: |
+          if [ -n "${{ steps.prev.outputs.value }}" ]; then
+            echo "value=${{ steps.prev.outputs.value }}..v${{ needs.guard.outputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=--current" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate changelog snippet (git-cliff)
+        id: cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: ${{ steps.range.outputs.value }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine prerelease flag
+        id: prerelease
+        shell: bash
+        run: |
+          v="${{ needs.guard.outputs.version }}"
+          if [[ "$v" == *-* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # We keep idempotent logic (view/edit or create) so reruns don't fail if release already exists.
+      - name: Create or update release
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+          RELEASE_NOTES: ${{ steps.cliff.outputs.content }}
+          IS_PRERELEASE: ${{ steps.prerelease.outputs.is_prerelease }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v${VERSION}"
+          notes="${RELEASE_NOTES:-No changelog entry found}"
+          echo "Preparing release for $tag"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag exists -> updating"
+            gh release edit "$tag" \
+              --title "Release ${VERSION}" \
+              --prerelease="$IS_PRERELEASE" \
+              --notes "$notes"
+          else
+            echo "Creating release $tag"
+            gh release create "$tag" \
+              --title "Release ${VERSION}" \
+              --prerelease="$IS_PRERELEASE" \
+              --notes "$notes"
+          fi
+          echo "Release complete."
+
+      # Trigger publish workflow as fallback (in case PAT is not available or release event is suppressed)
+      - name: Trigger publish workflow
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run publish.yml \
+            -f version="${{ needs.guard.outputs.version }}" \
+            -f prerelease="${{ steps.prerelease.outputs.is_prerelease }}"
+
+      # Notify on release workflow failure to catch token/publish issues early
+      - name: Notify on failure
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::error::Release workflow failed for version ${{ needs.guard.outputs.version }}"
+          echo "::notice::Check if RELEASE_PAT is configured to ensure publish.yml triggers properly"
+          echo "::notice::Without proper token, the release event may be suppressed and npm publish will not occur"
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "=== Release Summary ==="
+          echo "Version: ${{ needs.guard.outputs.version }}"
+          echo "Tag created in this run: ${{ steps.tag.outputs.created }}"
+          echo "Previous tag: ${{ steps.prev.outputs.value || 'None' }}"
+          echo "Prerelease: ${{ steps.prerelease.outputs.is_prerelease }}"
+          echo "Range used: ${{ steps.range.outputs.value }}"
+          echo "Notes length: ${#RELEASE_NOTES}"
+          echo "Done."
