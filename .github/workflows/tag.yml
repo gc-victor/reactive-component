@@ -62,9 +62,33 @@ jobs:
             echo "Tag $tag already exists; skipping."
             exit 0
           fi
+
+          echo "Creating annotated tag: $tag"
           git tag -a "$tag" -m "release: $tag" origin/main
+
+          echo "Pushing tag: $tag"
           git push origin "$tag"
-          echo "Tagged and pushed $tag"
+
+          echo "✓ Tagged and pushed $tag successfully"
+          echo "This should trigger the 'Create GitHub Release from CHANGELOG' workflow"
+          echo "Monitor: https://github.com/${{ github.repository }}/actions"
+
+      - name: Verify tag push and provide next steps
+        if: steps.check_release_commit.outputs.should_tag == 'true'
+        run: |
+          tag="${{ steps.check_release_commit.outputs.tag }}"
+
+          echo "=== Tag Creation Summary ==="
+          echo "✓ Tag workflow completed"
+          echo "✓ Tag: $tag"
+          echo "✓ Commit: $(git rev-parse origin/main)"
+          echo "✓ Expected next step: gh-release.yml should trigger automatically"
+          echo ""
+          echo "If gh-release workflow does not run within a few minutes:"
+          echo "1. Check repository Actions settings are enabled"
+          echo "2. Verify GITHUB_TOKEN has 'contents: write' permission"
+          echo "3. Manually trigger: gh workflow run gh-release.yml --ref $tag"
+          echo "4. Or check: https://github.com/${{ github.repository }}/actions"
 
       - name: "Skip tagging (message does not match '^release: v')"
         if: steps.check_release_commit.outputs.should_tag != 'true'
