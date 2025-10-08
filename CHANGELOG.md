@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2] - 2025-10-08
+
+### ⚙️ Miscellaneous Tasks
+
+- *(publish)* Enhance publish workflow for dispatch and prerelease handling
+- *(cleanup)* Remove legacy tag and release workflows
+
 ## [0.4.1] - 2025-10-08
 
 ### 📚 Documentation
