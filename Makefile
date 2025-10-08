@@ -141,7 +141,6 @@ release-major:
 # Tag main after the release PR is merged
 
 release-tag: ensure-clean
-	npm run test; \
 	if ! git checkout main; then \
 		echo "Error: Failed to checkout main branch"; \
 		exit 1; \
