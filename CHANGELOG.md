@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2025-10-08
+
+### 📚 Documentation
+
+- *(readme)* Revise credits; refine lifecycle example formatting
+- *(readme)* Update and clarify documentation
+
+### 🎨 Styling
+
+- Reorder imports in example client index
+
+### ⚙️ Miscellaneous Tasks
+
+- *(makefile)* Streamline release-tag target
+- Add GitHub Actions workflows for release, publish, tag, and tests
+
 ## [0.4.0] - 2025-09-09
 
 ### 🚀 Features
