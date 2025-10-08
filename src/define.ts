@@ -1,4 +1,4 @@
-import { ReactiveComponent, type StateValue } from "./index.js";
+import { ReactiveComponent, type StateValue } from "./rc.js";
 
 /**
  * A ReactiveComponent with public access to protected methods for define API
