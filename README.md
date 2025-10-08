@@ -53,10 +53,10 @@ Let's start with a simple counter component that demonstrates several core react
    - Component methods are automatically bound to the instance
    - Clean event handler syntax
 
-3. Two-way Data Binding
-   - The `$state` directive creates bidirectional binding
-   - DOM updates when state changes
-   - State updates when DOM changes
+3. State Initialization + Reactive Display
+   - `$state` initializes a state key from the element’s initial text content
+   - After initialization it is one-way: state updates the DOM
+   - User edits do not propagate back (not two-way)
 
 Here's the complete example:
 
@@ -76,7 +76,7 @@ customElements.define("basic-counter", BasicCounter);
 
 ```html
 <basic-counter>
-  <!-- $state directive creates a two-way binding -->
+  <!-- $state initializes `count` from HTML (0) then one-way reflects state updates -->
   <p>Count: <span $state="count">0</span></p>
 
   <!-- onclick attribute automatically binds to component methods -->
@@ -97,7 +97,7 @@ customElements.define("basic-counter", BasicCounter);
    - Changes automatically trigger view updates
 
 3. Template Structure
-   - `$state="count"` creates two-way binding for the counter
+   - `$state="count"` initializes the counter (0) then one-way reflects state
    - `onclick` handlers map directly to component methods
    - Tailwind classes provide styling without extra CSS
 
@@ -121,10 +121,10 @@ The component uses a sophisticated signal-based reactive system for efficient st
    - Smart caching prevents unnecessary recalculations
    - Dependencies are tracked without explicit declarations
 
-3. Two-Way Data Binding
-   - State changes automatically sync with the DOM
-   - DOM events update state seamlessly
-   - No manual DOM manipulation is needed
+3. DOM Binding Modes
+   - `$state`: initialization + one-way (state → DOM)
+   - `$bind-text`, `$bind-class`, `$bind-attr`: one-way (state → DOM)
+   - `$bind-value`, `$bind-checked`: two-way (form control ↔ state)
 
 Here's a practical example showing these features in action:
 
@@ -165,6 +165,8 @@ Key Features Demonstrated:
 
 Computed properties are a powerful feature that enables you to create derived state values that automatically update based on changes to their dependencies. This reactive computation system provides several key benefits:
 
+**Note:** Calling `this.compute()` more than once with the same property name will log a warning in the console, as it indicates a potential logic error.
+
 1. Automatic Dependency Tracking
    - The system intelligently tracks dependencies between state values
    - Only recomputes when dependent values change
@@ -203,13 +205,13 @@ customElements.define("temperature-converter", TemperatureConverter);
 ```html
 <temperature-converter>
   <div class="space-y-2">
-    <!-- Base temperature with two-way binding -->
+    <!-- Base temperature initialized via $state (one-way thereafter) -->
     <p>Celsius: <span $state="celsius">20</span>°C</p>
 
     <!-- Computed temperatures update automatically -->
     <p>Fahrenheit: <span $bind-text="fahrenheit" />°F</p>
 
-    <!-- Interactive slider updates celsius state -->
+    <!-- Interactive slider updates celsius state (two-way) -->
     <input type="range" min="0" max="40" $bind-value="celsius" class="w-full" />
   </div>
 </temperature-converter>
@@ -229,15 +231,16 @@ Key Features Demonstrated:
 
 Element references provide direct, type-safe access to DOM elements in your components. This feature enables efficient manipulation of DOM elements while maintaining reactivity and encapsulation.
 
-1. Type-Safe Element Access
+1. Direct Element Access
    - Direct access to DOM elements through the `refs` object
-   - Automatic type inference for element properties
-   - Compile-time checking for element existence
+   - Refs are populated at runtime after the component connects to the DOM
+   - Always check for a ref's existence before using it
 
 2. Ref Registration
    - Elements marked with `$ref` attribute are automatically registered
    - References are available immediately after component mounting
    - Clean separation between template and logic
+   - **Dynamic Refs:** Refs on elements dynamically added after initial connection are recognized and available on `this.refs`. However, it's recommended to define refs in your initial HTML for better performance and predictability.
 
 3. Reactive Integration
    - Refs work seamlessly with reactive state
@@ -279,8 +282,8 @@ customElements.define("ref-demo", RefDemo);
     <p $ref="output" class="text-xl font-bold text-center p-4 border rounded">Initial Text</p>
     <div class="flex justify-center space-x-4">
       <!-- Event handlers trigger ref-based updates -->
-      <button onClick="updateText" class="bg-purple-500 text-white px-4 py-2 rounded">Update Text</button>
-      <button onClick="updateColor" class="bg-pink-500 text-white px-4 py-2 rounded">Change Color</button>
+      <button onclick="updateText" class="bg-purple-500 text-white px-4 py-2 rounded">Update Text</button>
+      <button onclick="updateColor" class="bg-pink-500 text-white px-4 py-2 rounded">Change Color</button>
     </div>
   </div>
 </ref-demo>
@@ -326,9 +329,9 @@ class JsonStateManager extends ReactiveComponent {
     this.setState("age", 30);
     this.setState("bio", "");
 
-    // Create computed JSON representation with metadata
+    // Create computed JSON representation
     // Updates automatically when any dependency changes
-    this.compute("json", ["name", "age", "bio"], (name, age, bio, lastUpdated) =>
+    this.compute("json", ["name", "age", "bio"], (name, age, bio) =>
       JSON.stringify(
         {
           name,
@@ -463,7 +466,7 @@ customElements.define("theme-consumer", ThemeConsumer);
 
 ```html
 <theme-provider>
-  <button type="button" onClick="toggleTheme">Toggle Theme</button>
+  <button type="button" onclick="toggleTheme">Toggle Theme</button>
   <theme-consumer>
     <p $bind-text="themeMode"></p>
     <p $ref="themeInfo"></p>
@@ -507,8 +510,8 @@ Here's a practical example demonstrating form-handling capabilities:
 class FormDemo extends ReactiveComponent {
   constructor() {
     super();
-    // Initialize form state
-    this.setState("isEnabled", document.getElementById("enabled")?.checked ?? false);
+    // Initialize form state with defaults
+    this.setState("isEnabled", false);
     this.setState("inputText", "");
 
     // Compute disabled state from isEnabled
@@ -525,7 +528,7 @@ class FormDemo extends ReactiveComponent {
 
     // Track validation state
     // Updates when is enabled and the input text changes
-    this.compute("isSatusValid", ["isEnabled", "inputText"], (enabled, text) => {
+    this.compute("isStatusValid", ["isEnabled", "inputText"], (enabled, text) => {
       return { [text.length >= 3 || !enabled ? "remove" : "add"]: "text-red-500" };
     });
   }
@@ -569,6 +572,56 @@ Key Features Demonstrated:
 - Clean separation of form logic and presentation
 - Reactive updates without explicit event handling
 
+### Attribute Binding (`$bind-attr`)
+
+The `$bind-attr` binding manages multiple element attributes dynamically from a single state object.
+
+**State Shape:**
+
+```typescript
+this.setState("buttonAttrs", {
+  "data-id": "user-123", // Sets attribute
+  "aria-label": "Submit Form",
+  hidden: false, // Removes 'hidden' attribute
+  disabled: true, // Adds 'disabled' attribute
+  title: null, // Removes 'title' attribute
+});
+```
+
+**HTML:**
+
+```html
+<button $bind-attr="buttonAttrs">Submit</button>
+```
+
+**Rules:**
+
+- A truthy value sets the attribute. `true` results in an empty attribute (e.g., `disabled`).
+- A falsy value (`false`, `null`, `undefined`, `""`) removes the attribute.
+
+### Class Binding (`$bind-class`)
+
+`$bind-class` operates on a state object that specifies `add`, `remove`, `toggle`, or `replace` operations. It does not work with simple strings or booleans.
+
+**State Shape:**
+
+```typescript
+this.setState("panelClasses", {
+  add: ["panel", "active"], // Add one or more classes
+  remove: "loading", // Remove a class
+  toggle: "highlighted", // Toggle a class
+  replace: ["old-style", "new-style"], // Replace a class
+});
+```
+
+**HTML:**
+
+```html
+<div $bind-class="panelClasses">...</div>
+```
+
+**Note:** Operations are cumulative. Classes added in a previous state update will persist unless explicitly removed.
+
 ### Custom Binding Handlers
 
 Custom binding handlers allow you to extend the component's binding capabilities with your own custom logic. This powerful feature enables specialized DOM updates based on state changes.
@@ -600,33 +653,42 @@ class CustomBindingDemo extends ReactiveComponent {
     this.setState("status", "idle");
   }
 
-  protected customBindingHandlers(
-    stateKey: string,
-    element: HTMLElement,
-    formattedValue: string,
-    rawValue: StateValue,
-  ): Record<string, () => void> {
+  protected customBindingHandlers({
+    element,
+    rawValue,
+    formattedValue,
+  }: {
+    element?: HTMLElement;
+    rawValue?: StateValue;
+    formattedValue?: string;
+  }): Record<string, () => void> {
     return {
       // Custom handler for counter animation
       "animate-count": () => {
-        element.style.transform = `scale(${1 + Number(rawValue) * 0.1})`;
-        element.textContent = formattedValue;
+        if (element && typeof rawValue === "number") {
+          element.style.transform = `scale(${1 + rawValue * 0.1})`;
+          element.textContent = formattedValue ?? String(rawValue);
+        }
       },
 
       // Custom handler for theme switching
       "theme-switch": () => {
-        const theme = String(rawValue);
-        element.classList.remove("theme-light", "theme-dark");
-        element.classList.add(`theme-${theme}`);
-        element.setAttribute("aria-theme", theme);
+        if (element && rawValue) {
+          const theme = String(rawValue);
+          element.classList.remove("theme-light", "theme-dark");
+          element.classList.add(`theme-${theme}`);
+          element.setAttribute("aria-theme", theme);
+        }
       },
 
       // Custom handler for status indicators
       "status-indicator": () => {
-        const status = String(rawValue);
-        element.setAttribute("data-status", status);
-        element.setAttribute("aria-busy", status === "loading" ? "true" : "false");
-        element.classList.toggle("pulse", status === "active");
+        if (element && rawValue) {
+          const status = String(rawValue);
+          element.setAttribute("data-status", status);
+          element.setAttribute("aria-busy", status === "loading" ? "true" : "false");
+          element.classList.toggle("pulse", status === "active");
+        }
       },
     };
   }
@@ -652,18 +714,18 @@ customElements.define("custom-binding-demo", CustomBindingDemo);
   <div class="space-y-4">
     <!-- Animated counter binding -->
     <div>
-      <span $bind="animate-count:counter" class="text-2xl font-bold transition-transform"> 0 </span>
+      <span $bind-animate-count="counter" class="text-2xl font-bold transition-transform"> 0 </span>
       <button onclick="increment" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded">Increment</button>
     </div>
 
     <!-- Theme switching binding -->
-    <div $bind="theme-switch:theme" class="p-4 border rounded transition-colors">
+    <div $bind-theme-switch="theme" class="p-4 border rounded transition-colors">
       <h3>Theme Demo</h3>
       <button onclick="toggleTheme" class="px-4 py-2 bg-gray-200 rounded">Toggle Theme</button>
     </div>
 
     <!-- Status indicator binding -->
-    <div $bind="status-indicator:status" class="p-2 border rounded">
+    <div $bind-status-indicator="status" class="p-2 border rounded">
       <p>Current Status: <span $bind-text="status"></span></p>
       <div class="flex space-x-2 mt-2">
         <button onclick="updateStatus('idle')" class="px-3 py-1 bg-gray-500 text-white rounded">Idle</button>
@@ -802,6 +864,107 @@ Details:
   - Complex lifecycles or custom element internals
 - Global availability: when running in a browser, `window.define` is set for script-based usage.
 
+## Value Coercion
+
+When a component initializes, text content from elements with `$state` is automatically coerced into a JavaScript type. The runtime applies these deterministic rules (evaluated in the order below):
+
+| Input from HTML                                 | Coerced Type       | Notes / Example                                   |
+| ----------------------------------------------- | ------------------ | ------------------------------------------------- |
+| `"true"`                                        | `boolean`          | true                                              |
+| `"false"`                                       | `boolean`          | false                                             |
+| `"42"`, `"-10.5"`                               | `number`           | 42, -10.5                                         |
+| `"null"`                                        | `null`             | null                                              |
+| `"undefined"`                                   | `string`           | the literal string `"undefined"` - see note below |
+| Strings starting with `{` or `[` and valid JSON | `object` / `array` | parsed via `JSON.parse`                           |
+| Other                                           | `string`           | preserved as-is                                   |
+
+Important details and guidance:
+
+- The implementation treats the token `"undefined"` as the literal string `"undefined"` (it does **not** coerce it to the JavaScript `undefined` value). Avoid using `"undefined"` as a sentinel in markup; omit the attribute or use `null` / an explicit value instead.
+- JSON parsing is attempted only when the string begins with `{` or `[` and valid JSON is present. Invalid JSON will remain a string.
+- **Note:** Coercion is automatically applied in the following scenarios:
+  1. When extracting initial values from `$state` elements in HTML
+  2. On every `setState(key, value)` call
+  3. On every computed property result from `compute()`
+
+  This means `setState("count", "42")` will store the **number** `42`, not the string.
+
+- These coercion rules are deterministic and intentionally conservative to avoid surprising application behavior (for example, `"0"` becomes the number `0`, but `"undefined"` remains a string).
+
+AIDEV-NOTE: Make UI/markup explicit instead of relying on `"undefined"`; prefer omitting attributes or using `null` / explicit JSON for complex values.
+
+## Binding Validation Rules
+
+To ensure predictable behavior, security, and fast parsing, the runtime enforces strict validation on `$`-prefixed bindings. Bindings must be simple identifiers (no expressions, interpolation, or punctuation). Violations are considered errors and will be logged; the runtime will keep the last valid state and fall back to safe defaults.
+
+| Aspect / Target                               | Attribute Pattern                                 | Allowed Pattern (Regex) | Notes                                                                            |
+| --------------------------------------------- | ------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------- |
+| Binding type (e.g. `bind-<type>`)             | `$bind-<type>="key"`                              | `/^[a-zA-Z0-9-]+$/`     | Hyphens allowed in the binding type (e.g. `$bind-animate-count`, `$bind-custom`) |
+| Binding value (state key / ref / $state name) | `$state="key"`, `$ref="name"`, `$bind-text="key"` | `/^[a-zA-Z0-9]+$/`      | Strict alphanumeric state key; no dots, brackets, or operators                   |
+| Ref name                                      | `$ref="name"`                                     | `/^[a-zA-Z0-9]+$/`      | Alphanumeric only                                                                |
+
+Validation guidance:
+
+- Binding attribute values must be a single alphanumeric token matching `^[a-zA-Z0-9]+$`. Do not embed expressions like `user.name`, `items[0]`, or templates like `${value}`.
+- Binding types (the `<type>` part of `$bind-<type>`) may include hyphens and therefore use the looser pattern `/^[a-zA-Z0-9-]+$/`.
+- On invalid bindings the runtime will:
+  1. Log a descriptive validation error with the element, attribute, and offending value.
+  2. Suggest a corrected form (e.g., replace dots with a single key or rename the key).
+  3. Preserve the component's last-known-good state and fall back to a safe default display.
+
+### Form Input Gotchas
+
+#### Checkboxes
+
+- Use `$bind-checked` for boolean state on checkboxes.
+- Avoid `$bind-value` with checkboxes — the library will warn and may not behave as expected.
+
+#### Radio Buttons
+
+- Use `$bind-value` to bind to the `value` of the selected radio in a group.
+- Avoid `$bind-checked` for radio groups (will trigger a warning).
+- Requirement: all radios in a group must share the same `name` attribute.
+- Note: When the state bound to a radio group changes, radio inputs with the same `name` are updated automatically to reflect the new selection.
+
+NOTE: If your binding needs fall outside these patterns (complex paths, computed expressions), expose a simple computed state key (with `$compute`) instead of embedding expressions in markup.
+
+## Security Best Practices
+
+### HTML and Custom Bindings
+
+The library prioritizes performance and flexibility, which means it does **not** include built-in sanitization for HTML content. You are responsible for sanitizing any untrusted data.
+
+#### `$bind-html`
+
+Never use `$bind-html` with user-provided content without sanitizing it first.
+
+**Unsafe:**
+
+```typescript
+this.userComment = "<img src=x onerror=alert('XSS')>"; // Malicious input
+```
+
+```html
+<!-- This is vulnerable to XSS -->
+<div $bind-html="userComment"></div>
+```
+
+**Safe (with a library like DOMPurify):**
+
+```typescript
+import DOMPurify from "dompurify";
+this.userComment = DOMPurify.sanitize("<img src=x onerror=alert('XSS')>");
+```
+
+```html
+<!-- Sanitized and safe -->
+<div $bind-html="userComment"></div>
+```
+
+#### Custom Binding Handlers
+
+Be equally cautious in `customBindingHandlers`. Manipulating the DOM with `innerHTML`, or setting `href` attributes from untrusted state can also lead to XSS. Always validate and sanitize data within your custom handlers.
+
 ## API Reference
 
 ### Function-based define API
@@ -844,8 +1007,8 @@ Notes:
 - `setState(key: string, value: unknown)`: Initialize or update state with automatic type coercion
 - `getState(key: string)`: Retrieve current state value with type safety
 - `compute(key: string, dependencies: string[], computation: Function)`: Create computed property with dependency tracking
-- `effect(callback: Function)`: Create a side effect that runs when dependencies change
-- `customBindingHandlers(stateKey: string, element: HTMLElement, formattedValue: string, rawValue: StateValue)`: Override to add custom binding handlers for state updates
+- `effect(callback: Function)`: Create a side effect that runs when dependencies change. The callback may return a cleanup function that will be called when the component is disconnected from the DOM
+- `customBindingHandlers({ stateKey, element, formattedValue, rawValue }: { stateKey?: string; element?: HTMLElement; formattedValue?: string; rawValue?: StateValue }): Record<string, () => void>`: Override to add custom binding handlers for state updates. All parameters are optional.
 
 ### Context Methods
 
@@ -882,15 +1045,16 @@ Processes an element's attributes for special bindings and state declarations. T
 
 ### Binding Types
 
-| Binding Type     | Description                           | Example                                              |
-| ---------------- | ------------------------------------- | ---------------------------------------------------- |
-| `$bind-text`     | Text content with automatic updates   | `<span $bind-text="name"></span>`                    |
-| `$bind-html`     | HTML content with sanitization        | `<div $bind-html="content"></div>`                   |
-| `$bind-value`    | Form input value with two-way binding | `<input $bind-value="username">`                     |
-| `$bind-checked`  | Checkbox/radio state                  | `<input type="checkbox" $bind-checked="isActive">`   |
-| `$bind-disabled` | Element disabled state                | `<button $bind-disabled="isLoading">Submit</button>` |
-| `$bind-class`    | Dynamic class binding                 | `<div $bind-class="isActive">`                       |
-| `$bind-*`        | Custom state binding type             | `<div $bind-custom="myState">`                       |
+| Binding Type     | Description                                                                       | Example                                              |
+| ---------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `$bind-text`     | Text content with automatic updates                                               | `<span $bind-text="name"></span>`                    |
+| `$bind-html`     | **WARNING: No built-in sanitization.** Renders raw HTML. See Security section. | `<div $bind-html="content"></div>`                   |
+| `$bind-value`    | Form input value with two-way binding                                             | `<input $bind-value="username">`                     |
+| `$bind-checked`  | Checkbox/radio state                                                              | `<input type="checkbox" $bind-checked="isActive">`   |
+| `$bind-disabled` | Element disabled state                                                            | `<button $bind-disabled="isLoading">Submit</button>` |
+| `$bind-class`    | Dynamic class operations                                                          | `<div $bind-class="panelClasses">`                   |
+| `$bind-attr`     | Dynamically sets or removes multiple element attributes                           | `<button $bind-attr="buttonAttrs">`                  |
+| `$bind-*`        | Custom state binding type                                                         | `<div $bind-custom="myState">`                       |
 
 ## AI-Assisted Development with System Prompts
 
@@ -1003,10 +1167,10 @@ export async function handleRequest(req: Request): Promise<Response> {
           <p className="mb-2">
             Count: <span $state="count">0</span>
           </p>
-          <button type="button" onClick="decrement" className="mr-2 bg-blue-500 text-white px-4 py-2 rounded">
+          <button type="button" onclick="decrement" className="mr-2 bg-blue-500 text-white px-4 py-2 rounded">
             Decrement
           </button>
-          <button type="button" onClick="increment" className="bg-blue-500 text-white px-4 py-2 rounded">
+          <button type="button" onclick="increment" className="bg-blue-500 text-white px-4 py-2 rounded">
             Increment
           </button>
         </basic-counter>
