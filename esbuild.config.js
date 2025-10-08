@@ -1,15 +1,11 @@
 /**
  * esbuild.config.js
  *
- * Two entry points with settings equivalent to:
- *   esbuild src/index.ts src/define.ts \
- *     --bundle \
- *     --format=esm \
- *     --minify=true \
- *     --legal-comments=none \
- *     --entry-names=[dir]/[name] \
- *     --outdir=dist \
- *     --log-level=error
+ * Generates four output files:
+ *   - index.js (ESM, non-minified)
+ *   - define.js (ESM, non-minified)
+ *   - index.min.js (ESM, minified)
+ *   - define.min.js (ESM, minified)
  *
  * Add an npm script (manually) to run this config:
  *   "bundle:esbuild": "node esbuild.config.js"
@@ -19,19 +15,46 @@
 
 import { build } from "esbuild";
 
-const options = {
-    entryPoints: ["src/index.ts", "src/define.ts"],
+const baseOptions = {
+    entryPoints: {
+        index: "src/index.ts",
+        define: "src/define.ts",
+    },
     bundle: true,
     format: "esm",
-    minify: true,
     legalComments: "none",
-    entryNames: "[dir]/[name]",
     outdir: "dist",
     logLevel: "error",
 };
 
-build(options).catch((err) => {
-    // Fail loudly for CI; esbuild prints concise errors with logLevel=error
-    console.error(err);
-    process.exit(1);
-});
+// Non-minified build
+const nonMinifiedOptions = {
+    ...baseOptions,
+    minify: false,
+    entryNames: "[dir]/[name]",
+};
+
+// Minified build
+const minifiedOptions = {
+    ...baseOptions,
+    minify: true,
+    entryNames: "[dir]/[name].min",
+};
+
+async function buildAll() {
+    try {
+        // Build non-minified versions
+        await build(nonMinifiedOptions);
+
+        // Build minified versions
+        await build(minifiedOptions);
+
+        console.log("✅ Built all ESM bundles successfully");
+    } catch (err) {
+        // Fail loudly for CI; esbuild prints concise errors with logLevel=error
+        console.error("❌ Build failed:", err);
+        process.exit(1);
+    }
+}
+
+buildAll();
