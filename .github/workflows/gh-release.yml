@@ -55,13 +55,24 @@ jobs:
             echo "No previous tag found; using --current mode for $current"
           fi
 
+      # Determine git-cliff argument (range or --current) separately for clarity.
+      - name: Determine git-cliff range args
+        id: cliff_args
+        shell: bash
+        run: |
+          if [ -n "${{ steps.prev_tag.outputs.prev }}" ]; then
+            echo "value=${{ steps.prev_tag.outputs.prev }}..v${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=--current" >> "$GITHUB_OUTPUT"
+          fi
+
       # Uses git-cliff to render the section for this tag; keep formatting consistent with CHANGELOG.md.
       - name: Generate changelog content for this tag
         id: git-cliff
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
-          args: ${{ steps.prev_tag.outputs.prev && format('{0}..v{1}', steps.prev_tag.outputs.prev, steps.version.outputs.version) || '--current' }}
+          args: ${{ steps.cliff_args.outputs.value }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
