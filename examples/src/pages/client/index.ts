@@ -1,5 +1,5 @@
 import { define } from "../../../../src/define";
-import { ReactiveComponent, createContext } from "../../../../src/index";
+import { createContext, ReactiveComponent } from "../../../../src/index";
 
 // Basic Counter Component
 class BasicCounter extends ReactiveComponent {
