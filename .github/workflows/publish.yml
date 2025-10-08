@@ -80,11 +80,17 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
-      - run: npm publish --provenance --access public --tag next $TARBALL
-        if: inputs.prerelease == true || github.event.release.prerelease
+
+      # Publish prerelease versions with 'next' tag
+      - name: Publish prerelease to npm
+        run: npm publish --provenance --access public --tag next $TARBALL
+        if: inputs.prerelease == true
         env:
           TARBALL: ${{ needs.build.outputs.tarball }}
-      - run: npm publish --provenance --access public $TARBALL
-        if: inputs.prerelease == false || (github.event_name == 'release' && !github.event.release.prerelease)
+
+      # Publish stable versions to 'latest' tag (default)
+      - name: Publish stable to npm
+        run: npm publish --provenance --access public $TARBALL
+        if: inputs.prerelease == false
         env:
           TARBALL: ${{ needs.build.outputs.tarball }}
