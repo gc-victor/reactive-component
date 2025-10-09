@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2] - 2025-10-09
+
+### ⚙️ Miscellaneous Tasks
+
+- Enhance npm publish workflow reliability
+- Optimize workflow to run only on relevant file changes
+- Migrate publish workflow to pnpm and add manual dispatch
+- Refactor publish workflow to use workflow_run trigger
+- Update test workflow and optimize triggers
+
 ## [0.4.1] - 2025-10-08
 
 ### 📚 Documentation
