@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.3] - 2025-10-09
+
+### ⚙️ Miscellaneous Tasks
+
+- Migrate publish workflow to pnpm and add manual dispatch
+
 ## [0.4.2] - 2025-10-09
 
 ### ⚙️ Miscellaneous Tasks
