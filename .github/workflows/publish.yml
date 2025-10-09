@@ -1,12 +1,12 @@
-name: Publish to npm
+name: Publish
 
 on:
   workflow_dispatch:
-  release:
-    types:
-      - published
-      - prereleased
-      - released
+  workflow_run:
+    workflows: ["Release"] # name of the release.yml workflow
+    types: [completed]
+    branches:
+      - "release/**"
 
 permissions: {}
 
@@ -63,20 +63,8 @@ jobs:
       - name: Build package
         run: pnpm build
 
-      - name: Set npm version from last tag
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch --tags --force --prune 2>/dev/null || true
-          last_tag="$(git describe --tags --abbrev=0 2>/dev/null || true)"
-          if [ -z "$last_tag" ]; then
-            echo "No Git tag found to derive version."
-            exit 1
-          fi
-          version="${last_tag#v}"
-          npm version "$version" --git-tag-version=false
-
-      - id: pack
+      - name: Pack
+        id: pack
         run: |-
           TARBALL=$(npm pack)
           echo "tarball=$TARBALL" >> $GITHUB_OUTPUT
