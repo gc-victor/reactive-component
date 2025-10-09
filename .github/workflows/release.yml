@@ -2,6 +2,8 @@ name: Release
 
 on:
   pull_request:
+    branches:
+      - main
     types: [closed]
 
 permissions:
@@ -130,8 +132,7 @@ jobs:
           VERSION: ${{ needs.guard.outputs.version }}
           NOTES: ${{ steps.cliff.outputs.content }}
           IS_PRE: ${{ steps.prerelease.outputs.is_prerelease }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           set -euo pipefail
           tag="v${VERSION}"
