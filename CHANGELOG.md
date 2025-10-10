@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2025-10-10
+
+### 🚀 Features
+
+- Add minified build exports and update package config
+
+### 🚜 Refactor
+
+- Extract ReactiveComponent core to separate rc module
+- Restructure index files as export aggregators
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix npm authentication in publish workflow
+- *(examples)* Update dependencies and consolidate imports
+
+### Build
+
+- Enhance esbuild configuration for dual outputs
+
+### Deps
+
+- Update major dependencies to latest versions
+
 ## [0.4.2] - 2025-10-09
 
 ### ⚙️ Miscellaneous Tasks
