@@ -232,6 +232,143 @@ Add specially formatted comments throughout the codebase, where appropriate, for
 
 ---
 
+## 9.1. E2E Testing Framework (Playwright)
+
+### Introduction
+
+E2E tests validate complete component functionality in real browser environments using Playwright. Tests run against the examples application to ensure components behave correctly with user interactions, state management, and reactive updates.
+
+**Complete Documentation**: See [e2e/README.md](e2e/README.md) for comprehensive testing patterns, troubleshooting, and advanced topics.
+
+### Prerequisites
+
+**CRITICAL**: Before running E2E tests, you **MUST** start the example server:
+
+```bash
+pnpm example:server
+```
+
+This command builds the library and starts the examples application at `http://localhost:3000`.
+
+### Commands
+
+```bash
+# Start example server (REQUIRED before running tests)
+pnpm example:server           # build and start examples server
+
+# Run E2E tests
+pnpm test:e2e                 # run all e2e tests
+pnpm test:e2e:ui              # interactive UI mode
+pnpm test:e2e:headed          # visible browser mode
+pnpm test:e2e:debug           # debug mode with step-through
+
+# Run specific tests
+pnpm test:e2e --grep "counter"        # tests matching pattern
+pnpm test:e2e basic-state.test.ts     # specific test file
+```
+
+### Key Testing Principles
+
+| Principle | Guideline |
+|-----------|-----------|
+| **Component Scoping** | Always scope selectors to specific components (e.g., `page.locator("my-component button")`) |
+| **Wait for Readiness** | Use `await page.waitForSelector("component-name", { state: "visible" })` before interactions |
+| **Reactive Updates** | Account for async updates; use `await expect(element).toHaveText("value")` or small delays |
+| **Stable Selectors** | Prefer stable attributes (type, role, text) over fragile class names |
+| **Descriptive Names** | Use clear test names describing expected behavior |
+| **Test Independence** | Each test should run independently; avoid shared state |
+
+### Test Structure Pattern
+
+```typescript
+import { expect, test } from "@playwright/test";
+
+test.describe("Component Name", () => {
+    test.beforeEach(async ({ page }) => {
+        await page.goto("/");
+        await page.waitForSelector("component-name", { state: "visible" });
+    });
+
+    test("should perform expected behavior", async ({ page }) => {
+        const button = page.locator("component-name button");
+        const display = page.locator("component-name p");
+
+        await button.click();
+        await expect(display).toHaveText("Expected Text");
+    });
+});
+```
+
+### What to Test
+
+- **State Management**: Verify state updates reflect in DOM
+- **User Interactions**: Click, input, form submission, keyboard navigation
+- **Computed Properties**: Derived values calculate correctly
+- **Bindings**: Two-way data binding, reactive updates
+- **Form Validation**: Input validation, error states, enable/disable logic
+- **Component Communication**: Context/events between components
+- **Custom Bindings**: Specialized binding behavior
+
+### Common Patterns
+
+#### Testing State Changes
+
+```typescript
+test("should update state correctly", async ({ page }) => {
+    const counter = page.locator("counter-component p");
+    const button = page.locator("counter-component button");
+
+    await expect(counter).toHaveText("Count: 0");
+    await button.click();
+    await expect(counter).toHaveText("Count: 1");
+});
+```
+
+#### Testing Reactive Updates
+
+```typescript
+test("should handle reactive updates", async ({ page }) => {
+    const input = page.locator("component input");
+    const output = page.locator("component span");
+
+    await input.fill("new value");
+    await page.waitForTimeout(100); // Allow for reactive update
+    await expect(output).toHaveText("NEW VALUE");
+});
+```
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| **Element not found** | Add `await page.waitForSelector("component", { state: "visible" })` |
+| **Flaky tests** | Use Playwright assertions (`await expect()`) instead of manual delays |
+| **State not updating** | Add `await page.waitForTimeout(100)` for reactive updates |
+| **Component not initializing** | Wait for load state: `await page.waitForLoadState("networkidle")` |
+
+### Directory Structure
+
+E2E tests are located in `e2e/` directory, organized by component feature:
+
+- `basic-state-and-events.test.ts` - State updates and events
+- `two-way-data-binding.test.ts` - Input binding
+- `computed-properties.test.ts` - Derived state
+- `form-controls.test.ts` - Form validation
+- `define-component.test.ts` - Function-based components
+- `custom-progress-binding.test.ts` - Custom bindings
+- And more...
+
+### CI/CD Integration
+
+E2E tests run in CI environments. The configuration automatically:
+
+- Adjusts worker count (1 in CI, 4 locally)
+- Sets retry policy (2 retries in CI, 0 locally)
+- Captures traces and videos on failure
+- Uploads artifacts for debugging
+
+---
+
 ## 10. Directory-Specific AGENTS.md Files
 
 ### Guidelines
