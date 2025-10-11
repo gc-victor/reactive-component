@@ -213,6 +213,56 @@ describe("Define", () => {
                 agreed: true,
             });
         });
+
+        it("should handle $state and $bind proxy edge branches", () => {
+            // Captured variables to assert after component instantiation
+            let nullCoerced: unknown;
+            let symbolGet: unknown;
+            let symbolHas: boolean | null = null;
+            let bindExistingIsFunction: boolean | null = null;
+            let bindExistingCallResult: unknown;
+            let bindNonExistingIsUndefined: boolean | null = null;
+            let bindSymbolGet: unknown;
+
+            define("proxy-probe", function ProxyProbe({ $state, $bind }: Context) {
+                $state.nullish = null;
+                // Directly read via the proxy get-trap after setting null; should yield undefined
+                nullCoerced = ($state as Record<string, unknown>).nullish;
+
+                // and $state.has with non-string key path returning false (define.ts L150)
+                const sym = Symbol("s");
+                symbolGet = Reflect.get($state as object, sym);
+                symbolHas = Reflect.has($state as object, sym);
+
+                $bind.sample = () => "ok";
+                const existing = Reflect.get($bind as object, "sample") as unknown;
+                bindExistingIsFunction = typeof existing === "function";
+                bindExistingCallResult = typeof existing === "function" ? (existing as () => unknown)() : undefined;
+
+                const missing = Reflect.get($bind as object, "nope") as unknown;
+                bindNonExistingIsUndefined = missing === undefined;
+
+                const symB = Symbol("b");
+                bindSymbolGet = Reflect.get($bind as object, symB) as unknown;
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture("<proxy-probe></proxy-probe>");
+            cleanup = cleanupFn;
+
+            // Ensure element is instantiated (constructor + define context executed)
+            const el = root.querySelector("proxy-probe");
+            expect(el).toBeTruthy();
+
+            // Assertions for edge branches
+            expect(nullCoerced).toBeUndefined(); // null coerces to undefined via $state.get
+            expect(symbolGet).toBeUndefined(); // non-string key get -> undefined
+            expect(symbolHas).toBe(false); // non-string key has -> false
+
+            expect(bindExistingIsFunction).toBe(true); // $bind.get for existing returns bound function
+            expect(bindExistingCallResult).toBe("ok"); // function is callable and returns expected result
+            expect(bindNonExistingIsUndefined).toBe(true); // $bind.get for non-existing returns undefined
+            expect(bindSymbolGet).toBeUndefined(); // non-string key get -> undefined for $bind.get
+        });
     });
 
     describe("Advanced Features", () => {

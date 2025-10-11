@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "baseUrl": "./src",
     "paths": {
       "@/*": ["./*"],
@@ -22,6 +22,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
-    "types": ["./src/index.d.ts", "./src/define.d.ts"]
-  }
+    "types": ["./types"]
+  },
+  "include": ["./src", "./types"]
 }

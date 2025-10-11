@@ -21,33 +21,18 @@
     "type": "module",
     "main": "dist/index.js",
     "source": "src/index.ts",
-    "types": "src/index.d.ts",
+    "types": "dist/index.d.ts",
     "exports": {
         ".": {
-            "types": "./src/index.d.ts",
+            "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
-        },
-        "./index.min": {
-            "types": "./src/index.d.ts",
-            "import": "./dist/index.min.js"
-        },
-        "./define": {
-            "types": "./src/define.d.ts",
-            "import": "./dist/define.js"
-        },
-        "./define.min": {
-            "types": "./src/define.d.ts",
-            "import": "./dist/define.min.js"
         }
     },
     "files": [
         "dist/index.js",
-        "dist/index.min.js",
-        "dist/define.js",
-        "dist/define.min.js",
-        "src/index.d.ts",
-        "src/rc.d.ts",
-        "src/define.d.ts",
+        "dist/index.d.ts",
+        "dist/rc.d.ts",
+        "dist/define.d.ts",
         "README.md",
         "CHANGELOG.md",
         "LICENSE",
@@ -55,11 +40,12 @@
     ],
     "scripts": {
         "build": "npm run build:types && npm run bundle:esbuild",
-        "build:types": "npx -p typescript tsc ./src/index.ts ./src/rc.ts ./src/define.ts --module NodeNext --moduleResolution NodeNext --declaration --emitDeclarationOnly --strict --esModuleInterop --skipLibCheck --forceConsistentCasingInFileNames",
+        "build:types": "npx -p typescript tsc ./src/index.ts ./src/rc.ts ./src/define.ts --module NodeNext --moduleResolution NodeNext --declaration --emitDeclarationOnly --strict --esModuleInterop --skipLibCheck --forceConsistentCasingInFileNames --outDir ./dist",
         "bundle:esbuild": "node esbuild.config.js",
-        "examples": "cd examples && pnpm dev",
-        "check": "biome check ./src ./tests",
-        "check:fix": "biome check --write --unsafe ./src ./tests",
+        "example:dev": "pnpm --filter ./examples dev",
+        "example:server": "pnpm --filter ./examples build && pnpm --filter ./examples start",
+        "check": "biome check ./src ./tests ./e2e",
+        "check:fix": "biome check --write --unsafe ./src ./tests ./e2e",
         "test": "vitest run tests/",
         "test:watch": "vitest --watch",
         "test:coverage": "vitest run tests/ --coverage",

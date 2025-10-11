@@ -23,5 +23,5 @@
     },
     "types": ["./index.d.ts"]
   },
-  "include": ["src", "../src/index.ts", "../src/define.ts"]
+  "include": ["src", "../dist/index.js"]
 }

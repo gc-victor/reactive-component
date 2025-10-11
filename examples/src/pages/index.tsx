@@ -13,10 +13,10 @@ export default () => (
                     <p className="mb-2">
                         Count: <span $state="count">2</span>
                     </p>
-                    <button type="button" onClick="decrement" className="mr-2 bg-blue-500 text-white px-4 py-2 rounded">
+                    <button type="button" onclick="decrement" className="mr-2 bg-blue-500 text-white px-4 py-2 rounded">
                         Decrement
                     </button>
-                    <button type="button" onClick="increment" className="bg-blue-500 text-white px-4 py-2 rounded">
+                    <button type="button" onclick="increment" className="bg-blue-500 text-white px-4 py-2 rounded">
                         Increment
                     </button>
                 </basic-counter>
@@ -62,7 +62,7 @@ export default () => (
             <h2 className="text-lg font-cal mb-3">HTML Content Updates</h2>
             <div className="space-y-4">
                 <html-toggler className="p-4 border border-slate-300 rounded block">
-                    <button type="button" onClick="toggle" className="bg-green-500 text-white px-4 py-2 rounded mb-2">
+                    <button type="button" onclick="toggle" className="bg-green-500 text-white px-4 py-2 rounded mb-2">
                         Toggle Content
                     </button>
                     <p $state="content" $bind-html="content">
@@ -165,10 +165,10 @@ export default () => (
                             Initial Text
                         </p>
                         <div className="flex justify-center space-x-4">
-                            <button type="button" onClick="updateText" className="bg-purple-500 text-white px-4 py-2 rounded">
+                            <button type="button" onclick="updateText" className="bg-purple-500 text-white px-4 py-2 rounded">
                                 Update Text
                             </button>
-                            <button type="button" onClick="updateColor" className="bg-pink-500 text-white px-4 py-2 rounded">
+                            <button type="button" onclick="updateColor" className="bg-pink-500 text-white px-4 py-2 rounded">
                                 Change Color
                             </button>
                         </div>
@@ -191,7 +191,7 @@ export default () => (
                         <p className="flex">
                             <button
                                 type="button"
-                                onClick="startProgress"
+                                onclick="startProgress"
                                 $ref="startButton"
                                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                             >
@@ -199,7 +199,7 @@ export default () => (
                             </button>
                             <button
                                 type="button"
-                                onClick="stopProgress"
+                                onclick="stopProgress"
                                 $ref="stopButton"
                                 className="ml-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                             >
@@ -228,7 +228,7 @@ export default () => (
                         <button
                             type="button"
                             className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
-                            onClick="toggleVisibility"
+                            onclick="toggleVisibility"
                             aria-label="Toggle password visibility"
                         >
                             <span data-icon="show" style="display: block;" $bind-icon-visibility="isPasswordVisible">
@@ -279,7 +279,7 @@ export default () => (
                 <theme-provider className="p-4 border border-slate-300 rounded block">
                     <button
                         type="button"
-                        onClick="toggleTheme"
+                        onclick="toggleTheme"
                         className="mb-4 bg-slate-500 text-white px-4 py-2 rounded hover:bg-slate-600"
                     >
                         Toggle Theme
@@ -302,15 +302,15 @@ export default () => (
                             Count: <span $state="count">0</span>
                         </p>
                         <div className="flex justify-center space-x-2">
-                            <button type="button" onClick="decrement" className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                            <button type="button" onclick="decrement" className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
                                 Decrement
                             </button>
-                            <button type="button" onClick="reset" className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                            <button type="button" onclick="reset" className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
                                 Reset
                             </button>
                             <button
                                 type="button"
-                                onClick="increment"
+                                onclick="increment"
                                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                             >
                                 Increment
