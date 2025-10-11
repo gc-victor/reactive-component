@@ -11,7 +11,7 @@
         }
     },
     "files": {
-        "includes": ["**", "!src/*.d.ts"]
+        "includes": ["**", "!types", "!dist"]
     },
     "formatter": {
         "enabled": true,

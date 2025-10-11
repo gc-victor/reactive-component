@@ -1,10 +1,9 @@
-// import { define } from "../../../../src/define";
-import { createContext, define, ReactiveComponent } from "../../../../src/index";
+import { createContext, define, ReactiveComponent } from "../../../../dist/index.js";
 
 // Basic Counter Component
 class BasicCounter extends ReactiveComponent {
     count!: number;
-    connectedCallback() {
+    public override connectedCallback() {
         super.connectedCallback();
 
         // Create effect to track count changes with dependency on count state
@@ -13,11 +12,11 @@ class BasicCounter extends ReactiveComponent {
         });
     }
 
-    increment() {
+    public increment() {
         this.count++;
     }
 
-    decrement() {
+    public decrement() {
         this.count--;
     }
 }
@@ -28,7 +27,7 @@ class InputEcho extends ReactiveComponent {
     constructor() {
         super();
         this.setState("text", "");
-        this.compute("uppercase", ["text"], (c) => String(c).toUpperCase());
+        this.compute("uppercase", ["text"], (c: unknown) => String(c).toUpperCase());
     }
 }
 customElements.define("input-echo", InputEcho);
@@ -38,7 +37,7 @@ class TemperatureConverter extends ReactiveComponent {
     constructor() {
         super();
         this.setState("celsius", 20);
-        this.compute("fahrenheit", ["celsius"], (c) => ((c as number) * 9) / 5 + 32);
+        this.compute("fahrenheit", ["celsius"], (c: number) => (c * 9) / 5 + 32);
     }
 }
 customElements.define("temperature-converter", TemperatureConverter);
@@ -54,7 +53,7 @@ class HtmlToggler extends ReactiveComponent {
         this.setState("isAlternate", false);
     }
 
-    connectedCallback() {
+    public override connectedCallback() {
         super.connectedCallback();
         const content = this.getState("content");
         if (content) {
@@ -62,7 +61,7 @@ class HtmlToggler extends ReactiveComponent {
         }
     }
 
-    toggle() {
+    public toggle() {
         this.isAlternate = !this.isAlternate;
         this.content = this.isAlternate ? '<span class="text-blue-500">Alternate</span> content' : this.initialContent;
     }
@@ -79,7 +78,7 @@ class FormDemo extends ReactiveComponent {
 
         // Compute disabled state from isEnabled
         // Updates automatically when enabled state changes
-        this.compute("isDisabled", ["isEnabled"], (enabled) => !enabled);
+        this.compute("isDisabled", ["isEnabled"], (enabled: boolean) => !enabled);
 
         // Compute status message with validation
         // Re-computes when either input text or enabled state changes
@@ -110,7 +109,7 @@ class SelectDemo extends ReactiveComponent {
         super();
         this.setState("selectedOption", "");
 
-        this.compute("selected", ["selectedOption"], (option) =>
+        this.compute("selected", ["selectedOption"], (option: string) =>
             option ? `${this.querySelector(`[value=${option}]`)?.textContent} (${option})` : "",
         );
     }
@@ -126,7 +125,9 @@ class JsonStateManager extends ReactiveComponent {
         this.setState("bio", "");
 
         // Compute JSON representation
-        this.compute("json", ["name", "age", "bio"], (name, age, bio) => JSON.stringify({ name, age, bio }, null, 2));
+        this.compute("json", ["name", "age", "bio"], (name: string, age: number, bio: string) =>
+            JSON.stringify({ name, age, bio }, null, 2),
+        );
     }
 }
 customElements.define("json-state-management", JsonStateManager);
@@ -134,17 +135,18 @@ customElements.define("json-state-management", JsonStateManager);
 // Reference Demo Component
 class RefDemo extends ReactiveComponent {
     outputColor!: string;
+    protected declare refs: { output: HTMLParagraphElement };
     constructor() {
         super();
         this.setState("outputText", "Initial Text");
         this.setState("outputColor", "black");
     }
 
-    updateText() {
+    public updateText() {
         this.refs.output.textContent = this.refs.output.textContent === "Initial Text" ? "Updated Text Content" : "Initial Text";
     }
 
-    updateColor() {
+    public updateColor() {
         this.outputColor = this.outputColor === "black" ? "#f6339a" : "black";
         this.refs.output.style.color = this.outputColor;
     }
@@ -154,6 +156,7 @@ customElements.define("ref-demo", RefDemo);
 // Custom Progress Binding with Progress Bar
 class CustomProgressBinding extends ReactiveComponent {
     progressValue!: number;
+    protected declare refs: { startButton: HTMLButtonElement; stopButton: HTMLButtonElement };
     private progressInterval: number | null = null;
 
     constructor() {
@@ -179,12 +182,18 @@ class CustomProgressBinding extends ReactiveComponent {
         }
     }
 
-    protected customBindingHandlers({ element, rawValue }: { element: HTMLElement; rawValue: number }): Record<string, () => void> {
+    protected override customBindingHandlers({
+        element,
+        rawValue,
+    }: {
+        element?: HTMLElement;
+        rawValue?: unknown;
+    }): Record<string, () => void> {
         return {
             progress: () => {
                 if (element instanceof HTMLProgressElement) {
                     // Update progress value
-                    element.value = rawValue || 0;
+                    element.value = Number(rawValue) || 0;
                     element.max = 100;
                 }
             },
@@ -192,7 +201,7 @@ class CustomProgressBinding extends ReactiveComponent {
     }
 
     // Method to simulate progress
-    startProgress() {
+    public startProgress() {
         let value = this.progressValue && this.progressValue !== 100 ? this.progressValue : 0;
         // Clear any existing interval
         this.stopProgress();
@@ -211,7 +220,7 @@ class CustomProgressBinding extends ReactiveComponent {
     }
 
     // Method to stop progress simulation
-    stopProgress() {
+    public stopProgress() {
         if (this.progressInterval) {
             window.clearInterval(this.progressInterval);
             this.progressInterval = null;
@@ -234,24 +243,31 @@ class PasswordToggle extends ReactiveComponent {
         this.setState("isPasswordVisible", false);
     }
 
-    toggleVisibility() {
+    public toggleVisibility() {
         this.isPasswordVisible = !this.isPasswordVisible;
     }
 
     // Custom binding handler for icon visibility
-    customBindingHandlers({ element, rawValue }: { element: HTMLElement; rawValue: boolean }): Record<string, () => void> {
+    protected override customBindingHandlers({
+        element,
+        rawValue,
+    }: {
+        element?: HTMLElement;
+        rawValue?: unknown;
+    }): Record<string, () => void> {
         return {
             "icon-visibility": () => {
+                if (!element) return;
                 const key = element.dataset.icon;
                 const state: Record<string, string> = {
-                    hide: rawValue ? "block" : "none",
-                    show: rawValue ? "none" : "block",
+                    hide: (rawValue as boolean) ? "block" : "none",
+                    show: (rawValue as boolean) ? "none" : "block",
                 };
                 element.style.display = state[key as keyof typeof state];
             },
             type: () => {
                 if (element instanceof HTMLInputElement) {
-                    element.type = rawValue ? "text" : "password";
+                    element.type = (rawValue as boolean) ? "text" : "password";
                 }
             },
         };
@@ -291,7 +307,7 @@ class ThemeProvider extends ReactiveComponent {
         this.exposeContext(context);
     }
 
-    toggleTheme() {
+    public toggleTheme() {
         const currentTheme = this.getState("theme") as Theme;
         this.setState("theme", currentTheme.mode === LIGHT_THEME.mode ? DARK_THEME : LIGHT_THEME);
     }
@@ -303,6 +319,7 @@ class ThemeConsumer extends ReactiveComponent {
     mode!: string;
     buttonTheme!: string;
     themeMode!: string;
+    protected declare refs: { themeInfo: HTMLParagraphElement };
 
     constructor() {
         super();
@@ -321,7 +338,7 @@ class ThemeConsumer extends ReactiveComponent {
         });
     }
 
-    connectedCallback() {
+    public override connectedCallback() {
         super.connectedCallback();
 
         this.effect(() => {

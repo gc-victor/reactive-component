@@ -438,7 +438,7 @@ export class ReactiveComponent extends HTMLElement {
      * @protected
      */
     protected getState(key: string): StateValue {
-        return this.state.get(key)?.() ?? this.derived.get(key)?.() ?? null;
+        return (this.state.get(key)?.() ?? this.derived.get(key)?.() ?? null) as StateValue;
     }
 
     /**
