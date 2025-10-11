@@ -49,13 +49,18 @@
         "test": "vitest run tests/",
         "test:watch": "vitest --watch",
         "test:coverage": "vitest run tests/ --coverage",
-        "test:coverage:watch": "vitest --coverage"
+        "test:coverage:watch": "vitest --coverage",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:headed": "playwright test --headed",
+        "test:e2e:debug": "playwright test --debug"
     },
     "dependencies": {
         "alien-signals": "^3.0.0"
     },
     "devDependencies": {
         "@biomejs/biome": "~2.2.5",
+        "@playwright/test": "^1.56.0",
         "@vitest/browser": "^3.2.4",
         "@vitest/coverage-v8": "^3.2.4",
         "@vitest/ui": "^3.2.4",
