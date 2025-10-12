@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2025-10-12
+
+### 🚀 Features
+
+- *(e2e)* Introduce Playwright testing infrastructure
+
+### 🚜 Refactor
+
+- *(build)* Adopt unified ESM architecture
+
+### 📚 Documentation
+
+- *(e2e)* Add Playwright E2E testing guide
+
 ## [0.5.0] - 2025-10-10
 
 ### 🚀 Features
