@@ -31,7 +31,7 @@ test.describe("Custom Progress Binding", () => {
 
         // Verify progress has increased
         const value = await progressBar.getAttribute("value");
-        expect(Number.parseInt(value || "0")).toBeGreaterThan(0);
+        expect(Number.parseInt(value || "0", 10)).toBeGreaterThan(0);
 
         // Verify status shows loading
         const statusText = await status.textContent();
