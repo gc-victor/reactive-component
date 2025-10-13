@@ -15,7 +15,7 @@ test.describe("JSON State Management", () => {
         // Verify initial JSON structure
         const jsonText = await jsonOutput.textContent();
         expect(jsonText).toBeTruthy();
-        
+
         const json = JSON.parse(jsonText || "{}");
 
         expect(json).toEqual({
@@ -113,7 +113,7 @@ test.describe("JSON State Management", () => {
         // Verify it's valid JSON
         expect(jsonText).toBeTruthy();
         const json = JSON.parse(jsonText || "{}");
-        
+
         // Verify structure exists
         expect(json).toHaveProperty("name");
         expect(json).toHaveProperty("age");
