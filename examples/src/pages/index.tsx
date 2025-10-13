@@ -160,17 +160,36 @@ export default () => (
             <div className="space-y-4">
                 <ref-demo className="p-4 border border-slate-300 rounded block">
                     <div className="space-y-4">
-                        <p>Click buttons to update referenced element:</p>
-                        <p $ref="output" className="text-xl font-bold text-center p-4 border border-slate-300 rounded">
-                            Initial Text
-                        </p>
-                        <div className="flex justify-center space-x-4">
-                            <button type="button" onclick="updateText" className="bg-purple-500 text-white px-4 py-2 rounded">
-                                Update Text
+                        <p className="font-bold">Refs Demo - Legitimate Use Cases for Direct DOM Access</p>
+
+                        <div className="space-y-2 p-3">
+                            <label className="font-semibold text-sm block" for="usernameInput">
+                                1. Focus Management
+                            </label>
+                            <input
+                                $ref="usernameInput"
+                                type="text"
+                                id="usernameInput"
+                                placeholder="Username"
+                                className="border border-slate-300 p-2 w-full"
+                            />
+                            <button type="button" onclick="focusUsername" className="bg-blue-500 text-white px-4 py-2 rounded">
+                                Focus Username Input
                             </button>
-                            <button type="button" onclick="updateColor" className="bg-pink-500 text-white px-4 py-2 rounded">
-                                Change Color
+                        </div>
+
+                        <div className="space-y-2 p-3">
+                            <p className="font-semibold text-sm">2. DOM Measurements</p>
+                            <div $ref="measureBox" className="bg-slate-100 p-4 rounded">
+                                <p>This box can be measured!</p>
+                                <p className="text-xs text-slate-600">Resize the window to see updates</p>
+                            </div>
+                            <button type="button" onclick="measureElement" className="bg-green-500 text-white px-4 py-2 rounded">
+                                Measure Box
                             </button>
+                            <p className="text-sm">
+                                Dimensions: <span $bind-text="dimensions" />
+                            </p>
                         </div>
                     </div>
                 </ref-demo>
@@ -285,8 +304,6 @@ export default () => (
                         Toggle Theme
                     </button>
                     <theme-consumer className="block p-4 rounded transition-colors duration-200">
-                        <p $bind-text="themeMode" />
-                        <p $bind-text="buttonTheme" />
                         <p $ref="themeInfo" className="text-lg mb-2" />
                     </theme-consumer>
                 </theme-provider>

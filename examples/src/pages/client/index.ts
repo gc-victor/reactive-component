@@ -134,21 +134,31 @@ customElements.define("json-state-management", JsonStateManager);
 
 // Reference Demo Component
 class RefDemo extends ReactiveComponent {
-    outputColor!: string;
-    protected declare refs: { output: HTMLParagraphElement };
+    dimensions!: string;
+    protected declare refs: {
+        usernameInput: HTMLInputElement;
+        measureBox: HTMLDivElement;
+        scrollContainer: HTMLDivElement;
+        textArea: HTMLTextAreaElement;
+    };
+
     constructor() {
         super();
-        this.setState("outputText", "Initial Text");
-        this.setState("outputColor", "black");
+        this.setState("dimensions", "Not measured yet");
     }
 
-    public updateText() {
-        this.refs.output.textContent = this.refs.output.textContent === "Initial Text" ? "Updated Text Content" : "Initial Text";
+    // Use Case 1: Focus Management
+    // Refs are appropriate for imperative DOM operations like focus()
+    public focusUsername() {
+        this.refs.usernameInput.focus();
     }
 
-    public updateColor() {
-        this.outputColor = this.outputColor === "black" ? "#f6339a" : "black";
-        this.refs.output.style.color = this.outputColor;
+    // Use Case 2: DOM Measurements
+    // Refs are appropriate for reading DOM properties that aren't part of state
+    public measureElement() {
+        const box = this.refs.measureBox;
+        const rect = box.getBoundingClientRect();
+        this.dimensions = `${Math.round(rect.width)}px × ${Math.round(rect.height)}px`;
     }
 }
 customElements.define("ref-demo", RefDemo);
@@ -316,9 +326,6 @@ customElements.define("theme-provider", ThemeProvider);
 
 // Theme Consumer Component
 class ThemeConsumer extends ReactiveComponent {
-    mode!: string;
-    buttonTheme!: string;
-    themeMode!: string;
     protected declare refs: { themeInfo: HTMLParagraphElement };
 
     constructor() {
@@ -326,16 +333,11 @@ class ThemeConsumer extends ReactiveComponent {
 
         this.consumeContext(context);
 
-        this.setState("themeMode", "ThemeMode: light");
-        this.setState("buttonTheme", "ButtonTheme: light");
+        // Initialize state
+        this.setState("themeInfo", "Current Theme: light");
 
-        this.compute("themeMode", [context.state], (theme: Theme) => {
-            return `ThemeMode: ${theme.mode}`;
-        });
-
-        this.compute("buttonTheme", [context.state], (theme: Theme) => {
-            return `ButtonTheme: ${theme.mode}`;
-        });
+        // Computed text bindings
+        this.compute("themeInfo", [context.state], (theme: Theme) => `Current Theme: ${theme.mode}`);
     }
 
     public override connectedCallback() {
@@ -343,7 +345,6 @@ class ThemeConsumer extends ReactiveComponent {
 
         this.effect(() => {
             const context = this.getThemeContext();
-
             this.classList.remove(LIGHT_THEME.background, DARK_THEME.background, LIGHT_THEME.text, DARK_THEME.text);
             this.classList.add(context.background, context.text);
             this.refs.themeInfo.textContent = `Current Theme: ${context.mode}`;
