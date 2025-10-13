@@ -6,6 +6,8 @@ This HTML-first approach lets you work directly with your existing markup—ther
 
 In summary, Reactive Component offers reactive state management and declarative data binding in a simple, standards-compliant way—without the complexity of larger frameworks.
 
+**Important — Authoritative Prompt:** See [prompt.txt](./prompt.txt) for the HTML-first workflow, strict binding validation, security guidance, and AI usage rules.
+
 ## Features
 
 - Reactive: Automatically update the DOM when the state changes.
@@ -13,7 +15,7 @@ In summary, Reactive Component offers reactive state management and declarative 
 - Declarative Binding: Keep UI and data in sync with minimal code.
 - Zero Build: Use plain HTML and Custom Elements, no bundlers needed.
 - Progressive Enhancement: Boost SEO, speed up initial loads, and simplify maintenance.
-- High Performance: Direct DOM updates in a ~3.5KB gzipped package.
+- High Performance: Direct DOM updates in a ~4.8KB gzipped package.
 - TypeScript: Benefit from type safety and smarter tooling.
 - Framework Agnostic: Easily integrate with other libraries or legacy systems.
 - Context API: Share state between components in a clean, React-like way.
@@ -1045,20 +1047,38 @@ Processes an element's attributes for special bindings and state declarations. T
 
 ### Binding Types
 
-| Binding Type     | Description                                                                       | Example                                              |
-| ---------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `$bind-text`     | Text content with automatic updates                                               | `<span $bind-text="name"></span>`                    |
+| Binding Type     | Description                                                                    | Example                                              |
+| ---------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `$bind-text`     | Text content with automatic updates                                            | `<span $bind-text="name"></span>`                    |
 | `$bind-html`     | **WARNING: No built-in sanitization.** Renders raw HTML. See Security section. | `<div $bind-html="content"></div>`                   |
-| `$bind-value`    | Form input value with two-way binding                                             | `<input $bind-value="username">`                     |
-| `$bind-checked`  | Checkbox/radio state                                                              | `<input type="checkbox" $bind-checked="isActive">`   |
-| `$bind-disabled` | Element disabled state                                                            | `<button $bind-disabled="isLoading">Submit</button>` |
-| `$bind-class`    | Dynamic class operations                                                          | `<div $bind-class="panelClasses">`                   |
-| `$bind-attr`     | Dynamically sets or removes multiple element attributes                           | `<button $bind-attr="buttonAttrs">`                  |
-| `$bind-*`        | Custom state binding type                                                         | `<div $bind-custom="myState">`                       |
+| `$bind-value`    | Form input value with two-way binding                                          | `<input $bind-value="username">`                     |
+| `$bind-checked`  | Checkbox/radio state                                                           | `<input type="checkbox" $bind-checked="isActive">`   |
+| `$bind-disabled` | Element disabled state                                                         | `<button $bind-disabled="isLoading">Submit</button>` |
+| `$bind-class`    | Dynamic class operations                                                       | `<div $bind-class="panelClasses">`                   |
+| `$bind-attr`     | Dynamically sets or removes multiple element attributes                        | `<button $bind-attr="buttonAttrs">`                  |
+| `$bind-*`        | Custom state binding type                                                      | `<div $bind-custom="myState">`                       |
 
-## AI-Assisted Development with System Prompts
+## AI-Assisted Development
 
-ReactiveComponent includes a structured system prompt (`system_prompt.xml`) that helps developers create robust, accessible web components using AI assistance. This feature provides:
+ReactiveComponent includes an authoritative prompt specification (`prompt.txt`) that helps developers create robust, accessible web components using AI assistance. It defines the project’s core rules and workflows.
+
+### prompt.txt (Authoritative Prompt)
+
+- Location: project root at `prompt.txt`
+- Purpose: Acts as the single source of truth for HTML-first workflow, binding validation, state management rules, and security guidance
+- Key directives:
+  - HTML-first with approval gate before writing TypeScript/JavaScript
+  - Strict binding validation (alphanumeric keys only; no expressions in `$` bindings)
+  - Separation of concerns: keep user-facing text in HTML; no HTML/CSS in TS/JS
+  - Security guidance for `$bind-html` and custom binding handlers
+  - TypeScript-first patterns and use of Lucide Icons for icons
+- How to use:
+  - Read `prompt.txt` before generating or updating components
+  - Draft HTML structure first; request approval before adding TS/JS
+  - Use computed properties instead of expressions in bindings
+  - Avoid hardcoding secrets or user-facing text in TS/JS
+
+This feature provides:
 
 ### Key Benefits
 

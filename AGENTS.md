@@ -114,15 +114,15 @@ function setCount(component: ReactiveComponent, value: unknown) {
 
 ### Directory Structure (Current)
 
-| Path                           | Description                                         |
-| ------------------------------ | --------------------------------------------------- |
-| `src/`                         | Core library code (ReactiveComponent and helpers)   |
-| `public/`                      | Static assets for examples or demos                 |
-| `tests/`                       | Unit/integration tests (Vitest)                     |
-| `dist/`                        | Build outputs (do not edit)                         |
-| `coverage/`                    | Test coverage artifacts (do not edit)               |
-| `.github/`, `.query/`, `.dbs/` | Meta/config directories                             |
-| `system_prompt.xml`            | Authoritative system rules informing this AGENTS.md |
+| Path                           | Description                                        |
+| ------------------------------ | -------------------------------------------------- |
+| `src/`                         | Core library code (ReactiveComponent and helpers)  |
+| `public/`                      | Static assets for examples or demos                |
+| `tests/`                       | Unit/integration tests (Vitest)                    |
+| `dist/`                        | Build outputs (do not edit)                        |
+| `coverage/`                    | Test coverage artifacts (do not edit)              |
+| `.github/`, `.query/`, `.dbs/` | Meta/config directories                            |
+| `prompt.txt`                   | Authoritative prompt/spec informing this AGENTS.md |
 
 > **Note**: If paths evolve, update this section and prefer directory-specific AGENTS.md files for deeper context.
 
@@ -195,7 +195,7 @@ Add specially formatted comments throughout the codebase, where appropriate, for
 
 ## 8. Bindings and Validation (ReactiveComponent)
 
-### Core Constraints (from system_prompt.xml)
+### Core Constraints (from prompt.txt)
 
 | Constraint                        | Rule                                                                                                                                                                            |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -269,14 +269,14 @@ pnpm test:e2e basic-state.test.ts     # specific test file
 
 ### Key Testing Principles
 
-| Principle | Guideline |
-|-----------|-----------|
-| **Component Scoping** | Always scope selectors to specific components (e.g., `page.locator("my-component button")`) |
+| Principle              | Guideline                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------- |
+| **Component Scoping**  | Always scope selectors to specific components (e.g., `page.locator("my-component button")`)  |
 | **Wait for Readiness** | Use `await page.waitForSelector("component-name", { state: "visible" })` before interactions |
-| **Reactive Updates** | Account for async updates; use `await expect(element).toHaveText("value")` or small delays |
-| **Stable Selectors** | Prefer stable attributes (type, role, text) over fragile class names |
-| **Descriptive Names** | Use clear test names describing expected behavior |
-| **Test Independence** | Each test should run independently; avoid shared state |
+| **Reactive Updates**   | Account for async updates; use `await expect(element).toHaveText("value")` or small delays   |
+| **Stable Selectors**   | Prefer stable attributes (type, role, text) over fragile class names                         |
+| **Descriptive Names**  | Use clear test names describing expected behavior                                            |
+| **Test Independence**  | Each test should run independently; avoid shared state                                       |
 
 ### Test Structure Pattern
 
@@ -284,18 +284,18 @@ pnpm test:e2e basic-state.test.ts     # specific test file
 import { expect, test } from "@playwright/test";
 
 test.describe("Component Name", () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto("/");
-        await page.waitForSelector("component-name", { state: "visible" });
-    });
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.waitForSelector("component-name", { state: "visible" });
+  });
 
-    test("should perform expected behavior", async ({ page }) => {
-        const button = page.locator("component-name button");
-        const display = page.locator("component-name p");
+  test("should perform expected behavior", async ({ page }) => {
+    const button = page.locator("component-name button");
+    const display = page.locator("component-name p");
 
-        await button.click();
-        await expect(display).toHaveText("Expected Text");
-    });
+    await button.click();
+    await expect(display).toHaveText("Expected Text");
+  });
 });
 ```
 
@@ -315,12 +315,12 @@ test.describe("Component Name", () => {
 
 ```typescript
 test("should update state correctly", async ({ page }) => {
-    const counter = page.locator("counter-component p");
-    const button = page.locator("counter-component button");
+  const counter = page.locator("counter-component p");
+  const button = page.locator("counter-component button");
 
-    await expect(counter).toHaveText("Count: 0");
-    await button.click();
-    await expect(counter).toHaveText("Count: 1");
+  await expect(counter).toHaveText("Count: 0");
+  await button.click();
+  await expect(counter).toHaveText("Count: 1");
 });
 ```
 
@@ -328,23 +328,23 @@ test("should update state correctly", async ({ page }) => {
 
 ```typescript
 test("should handle reactive updates", async ({ page }) => {
-    const input = page.locator("component input");
-    const output = page.locator("component span");
+  const input = page.locator("component input");
+  const output = page.locator("component span");
 
-    await input.fill("new value");
-    await page.waitForTimeout(100); // Allow for reactive update
-    await expect(output).toHaveText("NEW VALUE");
+  await input.fill("new value");
+  await page.waitForTimeout(100); // Allow for reactive update
+  await expect(output).toHaveText("NEW VALUE");
 });
 ```
 
 ### Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| **Element not found** | Add `await page.waitForSelector("component", { state: "visible" })` |
-| **Flaky tests** | Use Playwright assertions (`await expect()`) instead of manual delays |
-| **State not updating** | Add `await page.waitForTimeout(100)` for reactive updates |
-| **Component not initializing** | Wait for load state: `await page.waitForLoadState("networkidle")` |
+| Issue                          | Solution                                                              |
+| ------------------------------ | --------------------------------------------------------------------- |
+| **Element not found**          | Add `await page.waitForSelector("component", { state: "visible" })`   |
+| **Flaky tests**                | Use Playwright assertions (`await expect()`) instead of manual delays |
+| **State not updating**         | Add `await page.waitForTimeout(100)` for reactive updates             |
+| **Component not initializing** | Wait for load state: `await page.waitForLoadState("networkidle")`     |
 
 ### Directory Structure
 
@@ -418,7 +418,7 @@ Update these pointers to match real paths as the repository evolves.
 
 | Topic                     | Location                                                          | Description                               |
 | ------------------------- | ----------------------------------------------------------------- | ----------------------------------------- |
-| **Authoritative rules**   | `system_prompt.xml`                                               | Source for binding/HTML-first constraints |
+| **Authoritative rules**   | `prompt.txt`                                                      | Source for binding/HTML-first constraints |
 | **Core library**          | `src/`                                                            | ReactiveComponent, bindings, state engine |
 | **Components & examples** | `src/components/`, `examples/`                                    | (if present)                              |
 | **Build & type configs**  | `tsconfig.json`, `package.json`, `biome.json`, `vitest.config.ts` | Configuration files                       |
