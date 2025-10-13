@@ -8,7 +8,7 @@ test.describe("Expose and Consume Context", () => {
 
     test("should display initial theme as light", async ({ page }) => {
         const themeConsumer = page.locator("theme-consumer");
-        const themeInfo = themeConsumer.locator("p").nth(2);
+        const themeInfo = themeConsumer.locator("p");
 
         // Wait for component initialization
         await page.waitForTimeout(200);
@@ -20,7 +20,7 @@ test.describe("Expose and Consume Context", () => {
     test("should toggle theme when Toggle Theme button is clicked", async ({ page }) => {
         const toggleButton = page.locator("theme-provider button:has-text('Toggle Theme')");
         const themeConsumer = page.locator("theme-consumer");
-        const themeInfo = themeConsumer.locator("p").nth(2);
+        const themeInfo = themeConsumer.locator("p");
 
         // Wait for initialization
         await page.waitForTimeout(200);
@@ -41,7 +41,7 @@ test.describe("Expose and Consume Context", () => {
     test("should toggle theme back to light", async ({ page }) => {
         const toggleButton = page.locator("theme-provider button:has-text('Toggle Theme')");
         const themeConsumer = page.locator("theme-consumer");
-        const themeInfo = themeConsumer.locator("p").nth(2);
+        const themeInfo = themeConsumer.locator("p");
 
         // Wait for initialization
         await page.waitForTimeout(200);
@@ -60,39 +60,39 @@ test.describe("Expose and Consume Context", () => {
     test("should update theme mode text", async ({ page }) => {
         const toggleButton = page.locator("theme-provider button:has-text('Toggle Theme')");
         const themeConsumer = page.locator("theme-consumer");
-        const themeModeText = themeConsumer.locator("p").nth(0);
+        const themeModeText = themeConsumer.locator("p");
 
         // Wait for initialization
         await page.waitForTimeout(200);
 
         // Verify initial theme mode
-        await expect(themeModeText).toHaveText("ThemeMode: light");
+        await expect(themeModeText).toHaveText("Current Theme: light");
 
         // Toggle theme
         await toggleButton.click();
         await page.waitForTimeout(200);
 
         // Verify theme mode updated
-        await expect(themeModeText).toHaveText("ThemeMode: dark");
+        await expect(themeModeText).toHaveText("Current Theme: dark");
     });
 
     test("should update button theme text", async ({ page }) => {
         const toggleButton = page.locator("theme-provider button:has-text('Toggle Theme')");
         const themeConsumer = page.locator("theme-consumer");
-        const buttonThemeText = themeConsumer.locator("p").nth(1);
+        const buttonThemeText = themeConsumer.locator("p");
 
         // Wait for initialization
         await page.waitForTimeout(200);
 
         // Verify initial button theme
-        await expect(buttonThemeText).toHaveText("ButtonTheme: light");
+        await expect(buttonThemeText).toHaveText("Current Theme: light");
 
         // Toggle theme
         await toggleButton.click();
         await page.waitForTimeout(200);
 
         // Verify button theme updated
-        await expect(buttonThemeText).toHaveText("ButtonTheme: dark");
+        await expect(buttonThemeText).toHaveText("Current Theme: dark");
     });
 
     test("should apply background and text classes based on theme", async ({ page }) => {
@@ -120,7 +120,7 @@ test.describe("Expose and Consume Context", () => {
     test("should handle multiple theme toggles", async ({ page }) => {
         const toggleButton = page.locator("theme-provider button:has-text('Toggle Theme')");
         const themeConsumer = page.locator("theme-consumer");
-        const themeInfo = themeConsumer.locator("p").nth(2);
+        const themeInfo = themeConsumer.locator("p");
 
         // Wait for initialization
         await page.waitForTimeout(200);
