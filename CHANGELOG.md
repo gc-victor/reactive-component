@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.1] - 2025-10-13
+
+### 🚀 Features
+
+- *(examples)* Refactor refs demo to focus and DOM measurement use cases
+
+### 📚 Documentation
+
+- *(prompt)* Adopt prompt.txt as authoritative spec
+
+### 🧪 Testing
+
+- *(e2e)* Align context tests with simplified theme-consumer structure 
+- *(e2e)* Improve robustness and consistency
+
+### Build
+
+- *(deps-dev)* Bump happy-dom from 19.0.2 to 20.0.0
+
 ## [0.6.0] - 2025-10-12
 
 ### 🚀 Features
