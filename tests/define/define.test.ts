@@ -436,8 +436,8 @@ describe("Define", () => {
             define("ref-integration", function RefIntegration({ $ref }: Context) {
                 // Access refs after DOM is processed
                 setTimeout(() => {
-                    headerRef = $ref("header") || null;
-                    contentRef = $ref("content") || null;
+                    headerRef = $ref.header || null;
+                    contentRef = $ref.content || null;
                 }, 0);
             });
 
@@ -458,6 +458,251 @@ describe("Define", () => {
                     resolve();
                 }, 10);
             });
+        });
+    });
+
+    describe("Custom Binding Handlers", () => {
+        it("should allow defining custom binding handlers", () => {
+            define("custom-binding-test", function CustomBindingTest({ $state, $customBindingHandlers }: Context) {
+                $state.activeTab = "tab1";
+
+                // Define custom binding handler
+                $customBindingHandlers["tab-trigger"] = ({ element, rawValue }) => {
+                    if (!(element instanceof HTMLElement)) return;
+                    const name = element.dataset.name;
+                    if (!name) return;
+
+                    const isActive = rawValue === name;
+                    element.setAttribute("aria-selected", isActive ? "true" : "false");
+                    element.tabIndex = isActive ? 0 : -1;
+                };
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <custom-binding-test>
+                    <button data-name="tab1" $bind-tab-trigger="activeTab">Tab 1</button>
+                    <button data-name="tab2" $bind-tab-trigger="activeTab">Tab 2</button>
+                </custom-binding-test>
+            `);
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("custom-binding-test") as Element;
+            const tab1 = component.querySelector('[data-name="tab1"]') as HTMLElement;
+            const tab2 = component.querySelector('[data-name="tab2"]') as HTMLElement;
+
+            // Initial state - tab1 should be active
+            expect(tab1.getAttribute("aria-selected")).toBe("true");
+            expect(tab1.tabIndex).toBe(0);
+            expect(tab2.getAttribute("aria-selected")).toBe("false");
+            expect(tab2.tabIndex).toBe(-1);
+
+            // Change state to tab2
+            component.setState("activeTab", "tab2");
+
+            // tab2 should now be active
+            expect(tab1.getAttribute("aria-selected")).toBe("false");
+            expect(tab1.tabIndex).toBe(-1);
+            expect(tab2.getAttribute("aria-selected")).toBe("true");
+            expect(tab2.tabIndex).toBe(0);
+        });
+
+        it("should handle multiple custom binding handlers", () => {
+            define("multi-binding-test", function MultiBindingTest({ $state, $customBindingHandlers }: Context) {
+                $state.progress = 50;
+                $state.status = "active";
+
+                // Custom progress binding
+                $customBindingHandlers.progress = ({ element, rawValue }) => {
+                    if (element instanceof HTMLProgressElement) {
+                        element.value = Number(rawValue) || 0;
+                        element.max = 100;
+                    }
+                };
+
+                // Custom status binding
+                $customBindingHandlers.status = ({ element, rawValue }) => {
+                    if (!(element instanceof HTMLElement)) return;
+                    element.dataset.status = String(rawValue);
+                };
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <multi-binding-test>
+                    <progress $bind-progress="progress"></progress>
+                    <div $bind-status="status"></div>
+                </multi-binding-test>
+            `);
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("multi-binding-test") as Element;
+            const progressBar = component.querySelector("progress") as HTMLProgressElement;
+            const statusDiv = component.querySelector("div") as HTMLElement;
+
+            // Initial state
+            expect(progressBar.value).toBe(50);
+            expect(progressBar.max).toBe(100);
+            expect(statusDiv.dataset.status).toBe("active");
+
+            // Update state
+            component.setState("progress", 75);
+            component.setState("status", "complete");
+
+            // Verify updates
+            expect(progressBar.value).toBe(75);
+            expect(statusDiv.dataset.status).toBe("complete");
+        });
+
+        it("should handle edge cases for custom binding handlers", () => {
+            define("edge-binding-test", function EdgeBindingTest({ $state, $customBindingHandlers }: Context) {
+                $state.value = "test";
+
+                // Handler that returns early for non-HTMLElement
+                $customBindingHandlers.strict = ({ element, rawValue }) => {
+                    if (!(element instanceof HTMLElement)) return;
+                    element.dataset.value = String(rawValue);
+                };
+
+                // Handler that uses complex logic
+                $customBindingHandlers.complex = ({ element, rawValue }) => {
+                    if (!(element instanceof HTMLElement)) return;
+                    const numValue = Number(rawValue);
+                    if (!Number.isNaN(numValue)) {
+                        element.style.width = `${numValue}%`;
+                    }
+                };
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <edge-binding-test>
+                    <div $bind-strict="value"></div>
+                    <div $bind-complex="value"></div>
+                </edge-binding-test>
+            `);
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("edge-binding-test") as Element;
+            const strictDiv = component.querySelector("div:first-child") as HTMLElement;
+
+            expect(strictDiv.dataset.value).toBe("test");
+        });
+    });
+
+    describe("Context Integration", () => {
+        it("should expose and consume context between components using define API", () => {
+            const themeContext = { id: Symbol("theme"), eventName: "reactive-component-context-theme", state: "theme" };
+
+            define("ctx-provider", function CtxProvider({ $state, $element }: Context) {
+                $state.theme = "light";
+                $element.exposeContext(themeContext);
+            });
+
+            define("ctx-consumer", function CtxConsumer({ $element }: Context) {
+                $element.consumeContext(themeContext);
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <ctx-provider>
+                    <ctx-consumer></ctx-consumer>
+                </ctx-provider>
+            `);
+            cleanup = cleanupFn;
+
+            const provider = root.querySelector("ctx-provider") as Element;
+            const consumer = root.querySelector("ctx-consumer") as Element;
+
+            // Context should be consumed
+            expect(consumer.getState("theme")).toBe("light");
+
+            // Update in provider should propagate
+            provider.setState("theme", "dark");
+            expect(consumer.getState("theme")).toBe("dark");
+        });
+
+        it("should consume context immediately when component is already connected", () => {
+            const dataContext = { id: Symbol("data"), eventName: "reactive-component-context-data", state: "data" };
+
+            define("late-provider", function LateProvider({ $state, $element }: Context) {
+                $state.data = "initial";
+                $element.exposeContext(dataContext);
+            });
+
+            define("late-consumer", function LateConsumer({ $element }: Context) {
+                // Intentionally consume context in connected callback
+                return {
+                    connected: () => {
+                        // Component is now connected, this should trigger immediate consumption
+                        $element.consumeContext(dataContext);
+                    },
+                };
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <late-provider>
+                    <late-consumer></late-consumer>
+                </late-provider>
+            `);
+            cleanup = cleanupFn;
+
+            const provider = root.querySelector("late-provider") as Element;
+            const consumer = root.querySelector("late-consumer") as Element;
+
+            // Context should be consumed even when called after connection
+            expect(consumer.getState("data")).toBe("initial");
+
+            // Update should still propagate
+            provider.setState("data", "updated");
+            expect(consumer.getState("data")).toBe("updated");
+        });
+    });
+
+    describe("Proxy Edge Cases", () => {
+        it("should handle non-string (symbol) keys in proxies", () => {
+            let refSymbolGet: unknown;
+            let refSymbolHas: boolean | null = null;
+            let refStringHas: boolean | null = null;
+            let handlerSymbolGet: unknown;
+            let handlerStringGet: unknown;
+
+            define("proxy-edge-test", function ProxyEdgeTest({ $ref, $customBindingHandlers }: Context) {
+                // Add a handler to test get trap with string
+                $customBindingHandlers.testHandler = ({ element }) => {
+                    (element as HTMLElement).dataset.test = "value";
+                };
+
+                const sym = Symbol("test");
+
+                // Test $ref proxy with symbol keys
+                refSymbolGet = Reflect.get($ref as object, sym);
+                refSymbolHas = Reflect.has($ref as object, sym);
+
+                // Test $ref has trap with non-existent string key
+                refStringHas = Reflect.has($ref as object, "nonExistent");
+
+                // Test $customBindingHandlers proxy with both symbol and string keys
+                handlerSymbolGet = Reflect.get($customBindingHandlers as object, sym);
+                handlerStringGet = Reflect.get($customBindingHandlers as object, "testHandler");
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <proxy-edge-test>
+                    <div $ref="existingRef">Test</div>
+                </proxy-edge-test>
+            `);
+            cleanup = cleanupFn;
+
+            const el = root.querySelector("proxy-edge-test");
+            expect(el).toBeTruthy();
+
+            // Proxies should safely ignore non-string keys
+            expect(refSymbolGet).toBeUndefined();
+            expect(refSymbolHas).toBe(false);
+            expect(handlerSymbolGet).toBeUndefined();
+
+            // String key (non-existent ref) should return false via has trap
+            expect(refStringHas).toBe(false);
+
+            // String key (existing handler) should return the handler function
+            expect(typeof handlerStringGet).toBe("function");
         });
     });
 });
