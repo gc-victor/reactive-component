@@ -36,7 +36,8 @@
         "README.md",
         "CHANGELOG.md",
         "LICENSE",
-        "package.json"
+        "package.json",
+        "prompt.txt"
     ],
     "scripts": {
         "build": "npm run build:types && npm run bundle:esbuild",
@@ -44,6 +45,7 @@
         "bundle:esbuild": "node esbuild.config.js",
         "example:dev": "pnpm --filter ./examples dev",
         "example:server": "pnpm --filter ./examples build && pnpm --filter ./examples start",
+        "example:test": "pnpm example:server > /dev/null 2>&1 & SERVER_PID=$! && pnpm test:e2e; kill $SERVER_PID 2>/dev/null",
         "check": "biome check ./src ./tests ./e2e",
         "check:fix": "biome check --write --unsafe ./src ./tests ./e2e",
         "test": "vitest run tests/",
