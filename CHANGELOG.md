@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2025-10-14
+
+### 🚀 Features
+
+- *(define)* Add property-based $ref, custom binding handlers, and context interop
+
+### 📚 Documentation
+
+- Update guides for define-first, $ref property API, and custom bindings
+- *(rc)* Correct comment typo for isStatusValid
+
+### 🧪 Testing
+
+- *(define)* Add tests for custom bindings and context; migrate $ref to property API
+- *(e2e)* Remove deprecated monolithic define e2e test
+
+### ⚙️ Miscellaneous Tasks
+
+- *(examples)* Modularize demos, pin sxo, add dist path alias, update lockfile
+- *(release)* Include prompt.txt in package files and add example:test script
+- *(tsconfig)* Remove types folder and clean tsconfig references
+- *(npm)* Add playwright:install script
+- *(e2e)* Add GitHub Actions E2E workflow
+
 ## [0.6.1] - 2025-10-13
 
 ### 🚀 Features
