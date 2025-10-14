@@ -52,6 +52,7 @@
         "test:watch": "vitest --watch",
         "test:coverage": "vitest run tests/ --coverage",
         "test:coverage:watch": "vitest --coverage",
+        "playwright:install": "playwright install --with-deps",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:headed": "playwright test --headed",
