@@ -436,12 +436,13 @@ Update these pointers to match real paths as the repository evolves.
 | **Function-based Component (`define`)** | Component registered via `define(name, definition)` using a context object instead of a class                        |
 | **Binding**                             | Attribute-based connection from state to DOM (e.g., `$bind-text="status"`)                                           |
 | **Computed Property**                   | Derived state recomputed from dependencies via `compute()` or `$compute()`                                           |
-| **Ref**                                 | Named handle to a DOM node within the component (`this.refs.name` or `$ref("name")`)                                 |
+| **Ref**                                 | Named handle to a DOM node within the component (`this.refs.name` or `$ref.name`)                                    |
 | **$state**                              | Property-only state API (Proxy) inside `define()`; read/write with `$state.key`; keys must be alphanumeric           |
 | **$bind**                               | Map of methods assigned in `define()` for event attributes (e.g., `$bind.increment = () => {}; onclick="increment"`) |
 | **$compute**                            | Define a derived state value in `define()`; signature `(key, sources, computation)`                                  |
 | **$effect**                             | Register a side-effect in `define()`; callback may return a cleanup function                                         |
-| **$ref**                                | Retrieve elements registered via `$ref` attributes inside `define()`                                                 |
+| **$ref**                                | Property-only API for accessing elements registered via `$ref` attributes inside `define()`                          |
+| **$customBindingHandlers**              | Define custom binding handlers in `define()`; extends the binding system with custom logic                           |
 | **Component Autonomy**                  | Encapsulation of state, lifecycle, and API within a custom element                                                   |
 | **Single Source of Truth**              | Centralized, authoritative state per component                                                                       |
 | **Unidirectional Data Flow**            | State updates propagate downward to bindings; events raise intentions upward                                         |
@@ -526,10 +527,14 @@ Inside the definition function, you receive a single context object with:
   - Subject to binding constraints (alphanumeric keys only)
 - `$compute(key, sources, computation)`: Define derived state
 - `$effect(callback)`: Register an effect; may return a cleanup function
-- `$ref(name)`: Access elements registered via `$ref` attributes
+- `$ref`: Property-only API for accessing elements registered via `$ref` attributes
+  - Access: `const el = $ref.refName`
 - `$bind`: Bind methods onto the component instance for event attributes
   - Assign with `$bind.methodName = (...args) => { /* this === element */ }`
   - Use in HTML via `onclick="methodName"` or other `on*` attributes
+- `$customBindingHandlers`: Define custom binding handlers for extending the binding system
+  - Assign with `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
+  - Use in HTML via `$bind-handler-name="stateKey"`
 
 All context methods are safe to call during definition execution.
 
@@ -543,12 +548,13 @@ The definition can return lifecycle hooks:
 
 - Works alongside class-based components; both use the same reactive engine.
 - Prefer `define()` for:
-  - Small components without inheritance needs
+  - Small to medium components without inheritance needs
   - Co-locating simple setup logic with the HTML
+  - Quick prototyping with custom bindings
 - Prefer class-based components for:
   - Advanced inheritance/mixins
-  - Overriding `customBindingHandlers`
   - Complex lifecycles or custom element internals
+  - Components requiring extensive private methods
 
 ### Binding and Validation Rules
 
@@ -595,33 +601,7 @@ The definition can return lifecycle hooks:
 
 ## Appendix B: Examples
 
-### Basic Counter (Structure First, Then Logic)
-
-#### HTML
-
-```html
-<basic-counter>
-  <p>Count: <span $state="count">0</span></p>
-  <button onclick="decrement">-</button>
-  <button onclick="increment">+</button>
-</basic-counter>
-```
-
-#### TypeScript
-
-```typescript
-class BasicCounter extends ReactiveComponent {
-  increment() {
-    this.count++;
-  }
-  decrement() {
-    this.count--;
-  }
-}
-customElements.define("basic-counter", BasicCounter);
-```
-
-### Basic Counter (with `define`)
+### Basic Counter
 
 #### HTML
 
@@ -666,32 +646,39 @@ define("define-counter", ({ $state, $bind }) => {
     <input type="checkbox" id="enabled" $bind-checked="isEnabled" />
     <label for="enabled">Enable input</label>
   </div>
-  <input type="text" $bind-value="inputText" $bind-disabled="isDisabled" $bind-class="validationClass" />
-  <p $bind-text="status"></p>
+  <input type="text" $bind-value="inputText" $bind-disabled="isDisabled" $bind-class="isInputValid" />
+  <p $bind-text="status" $bind-class="isStatusValid"></p>
 </form-demo>
 ```
 
 #### TypeScript
 
 ```typescript
-class FormDemo extends ReactiveComponent {
-  constructor() {
-    super();
-    this.setState("isEnabled", false);
-    this.setState("inputText", "");
-    this.compute("isDisabled", ["isEnabled"], (enabled) => !enabled);
-    this.compute("status", ["isEnabled", "inputText"], (enabled, text) => {
-      if (!enabled) return "Input disabled";
-      if (text.length < 3) return "Too short";
-      return "Valid input";
-    });
-    this.compute("validationClass", ["isEnabled", "inputText"], (_enabled, text) => ({
-      add: text.length < 3 ? "invalid" : "valid",
-      remove: text.length >= 3 ? "invalid" : "valid",
-    }));
-  }
-}
-customElements.define("form-demo", FormDemo);
+define("form-demo", ({ $state, $compute }) => {
+  // Initialize form state
+  $state.isEnabled = (document.getElementById("enabled") as HTMLInputElement)?.checked ?? false;
+  $state.inputText = "";
+
+  // Compute disabled state from isEnabled
+  $compute("isDisabled", ["isEnabled"], (enabled: unknown) => !(enabled as boolean));
+
+  // Compute status message with validation
+  $compute("status", ["isEnabled", "inputText"], (enabled: unknown, text: unknown) => {
+    if (!enabled) return "Input disabled";
+    if ((text as string).length < 3) return "Input too short (min 3 characters)";
+    return `Input active: ${(text as string).length} characters`;
+  });
+
+  // Track class binding for input validation styling
+  $compute("isInputValid", ["isEnabled", "inputText"], (enabled: unknown, text: unknown) => {
+    return { [(text as string).length >= 3 || !enabled ? "remove" : "add"]: "!border-red-500" };
+  });
+
+  // Track class binding for status validation styling
+  $compute("isStatusValid", ["isEnabled", "inputText"], (enabled: unknown, text: unknown) => {
+    return { [(text as string).length >= 3 || !enabled ? "remove" : "add"]: "!text-red-500" };
+  });
+});
 ```
 
 ### Temperature Converter (Computed-Only)
@@ -713,21 +700,17 @@ customElements.define("form-demo", FormDemo);
 #### TypeScript
 
 ```typescript
-class TemperatureConverter extends ReactiveComponent {
-  constructor() {
-    super();
-    this.setState("celsius", 20);
-    this.compute("fahrenheit", ["celsius"], (c) => (c * 9) / 5 + 32);
-    this.compute("kelvin", ["celsius"], (c) => c + 273.15);
-    this.compute("description", ["celsius"], (c) => {
-      if (c <= 0) return "Freezing";
-      if (c <= 20) return "Cool";
-      if (c <= 30) return "Warm";
-      return "Hot";
-    });
-  }
-}
-customElements.define("temperature-converter", TemperatureConverter);
+define("temperature-converter", ({ $state, $compute }) => {
+  $state.celsius = 20;
+  $compute("fahrenheit", ["celsius"], (c) => ((c as number) * 9) / 5 + 32);
+  $compute("kelvin", ["celsius"], (c) => (c as number) + 273.15);
+  $compute("description", ["celsius"], (c) => {
+    if ((c as number) <= 0) return "Freezing";
+    if ((c as number) <= 20) return "Cool";
+    if ((c as number) <= 30) return "Warm";
+    return "Hot";
+  });
+});
 ```
 
 ### Custom Binding Handler (Progress)
@@ -751,64 +734,60 @@ customElements.define("temperature-converter", TemperatureConverter);
 #### TypeScript
 
 ```typescript
-class CustomProgressBinding extends ReactiveComponent {
-  progressValue!: number;
-  private progressInterval: number | null = null;
+define("custom-progress-binding", ({ $state, $bind, $compute, $ref, $customBindingHandlers }) => {
+  let progressInterval: number | null = null;
 
-  constructor() {
-    super();
-    this.setState("progressValue", 0);
-    this.setState("status", "Starting...");
-    this.compute("loadingStatus", ["progressValue"], (value) => {
-      if (value >= 100) return "Complete!";
-      if (value > 0) return `Loading: ${value}%`;
-      return "Starting...";
-    });
-  }
+  $state.progressValue = 0;
+  $state.status = "Starting...";
 
-  protected customBindingHandlers({ element, rawValue }: { element: HTMLElement; rawValue: unknown }) {
-    return {
-      progress: () => {
-        if (element instanceof HTMLProgressElement) {
-          element.value = Number(rawValue) || 0;
-          element.max = 100;
-        }
-      },
-    };
-  }
+  $compute("loadingStatus", ["progressValue"], (value) => {
+    if ((value as number) >= 100) return "Complete!";
+    if ((value as number) > 0) return `Loading: ${value as number}%`;
+    return "Starting...";
+  });
 
-  private updateButtonsState(isRunning: boolean): void {
-    if (this.refs.startButton instanceof HTMLButtonElement) {
-      this.refs.startButton.disabled = isRunning;
+  const updateButtonsState = (isRunning: boolean): void => {
+    const startButton = $ref.startButton as HTMLButtonElement;
+    const stopButton = $ref.stopButton as HTMLButtonElement;
+    if (startButton) startButton.disabled = isRunning;
+    if (stopButton) stopButton.disabled = !isRunning;
+  };
+
+  $customBindingHandlers.progress = ({ element, rawValue }) => {
+    if (element instanceof HTMLProgressElement) {
+      element.value = Number(rawValue) || 0;
+      element.max = 100;
     }
-    if (this.refs.stopButton instanceof HTMLButtonElement) {
-      this.refs.stopButton.disabled = !isRunning;
-    }
-  }
+  };
 
-  startProgress() {
-    let value = this.progressValue && this.progressValue !== 100 ? this.progressValue : 0;
-    this.stopProgress();
-    this.updateButtonsState(true);
-    this.progressInterval = window.setInterval(() => {
+  $bind.startProgress = () => {
+    let value = $state.progressValue && $state.progressValue !== 100 ? ($state.progressValue as number) : 0;
+    if (progressInterval) {
+      window.clearInterval(progressInterval);
+    }
+    updateButtonsState(true);
+    progressInterval = window.setInterval(() => {
       if (value >= 100) {
-        this.stopProgress();
+        if (progressInterval) {
+          window.clearInterval(progressInterval);
+          progressInterval = null;
+          updateButtonsState(false);
+        }
       } else {
         value += 10;
-        this.progressValue = value;
+        $state.progressValue = value;
       }
     }, 500);
-  }
+  };
 
-  stopProgress() {
-    if (this.progressInterval) {
-      window.clearInterval(this.progressInterval);
-      this.progressInterval = null;
-      this.updateButtonsState(false);
+  $bind.stopProgress = () => {
+    if (progressInterval) {
+      window.clearInterval(progressInterval);
+      progressInterval = null;
+      updateButtonsState(false);
     }
-  }
-}
-customElements.define("custom-progress-binding", CustomProgressBinding);
+  };
+});
 ```
 
 ### Refs Demo
@@ -828,26 +807,22 @@ customElements.define("custom-progress-binding", CustomProgressBinding);
 #### TypeScript
 
 ```typescript
-class RefDemo extends ReactiveComponent {
-  constructor() {
-    super();
-  }
+define("ref-demo", ({ $state, $bind, $ref }) => {
+  $state.dimensions = "Not measured yet";
 
-  updateText() {
-    const current = this.refs.output.textContent ?? "";
-    this.refs.output.textContent = current === "Initial Text" ? "Updated Text" : "Initial Text";
-  }
+  $bind.focusUsername = () => {
+    const usernameInput = $ref.usernameInput as HTMLInputElement;
+    usernameInput?.focus();
+  };
 
-  changeColor() {
-    const color = this.refs.output.style.color === "black" ? "blue" : "black";
-    this.refs.output.style.color = color;
-  }
-
-  focusInput() {
-    this.refs.input.focus();
-  }
-}
-customElements.define("ref-demo", RefDemo);
+  $bind.measureElement = () => {
+    const measureBox = $ref.measureBox as HTMLDivElement;
+    const rect = measureBox?.getBoundingClientRect();
+    if (rect) {
+      $state.dimensions = `${Math.round(rect.width)}px × ${Math.round(rect.height)}px`;
+    }
+  };
+});
 ```
 
 ### JSON State Manager
@@ -877,21 +852,20 @@ customElements.define("ref-demo", RefDemo);
 #### TypeScript
 
 ```typescript
-class JsonStateManager extends ReactiveComponent {
-  constructor() {
-    super();
-    this.setState("name", "John Doe");
-    this.setState("age", 30);
-    this.setState("email", "");
-    this.compute("json", ["name", "age", "email"], (name, age, email) => JSON.stringify({ name, age, email }, null, 2));
-    this.compute(
-      "isValid",
-      ["name", "email"],
-      (name, email) => name.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
-    );
-  }
-}
-customElements.define("json-state-manager", JsonStateManager);
+define("json-state-manager", ({ $state, $compute }) => {
+  $state.name = "John Doe";
+  $state.age = 30;
+  $state.email = "";
+  $compute("json", ["name", "age", "email"], (name, age, email) =>
+    JSON.stringify({ name, age, email }, null, 2),
+  );
+  $compute(
+    "isValid",
+    ["name", "email"],
+    (name, email) =>
+      (name as string).length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email as string),
+  );
+});
 ```
 
 ---

@@ -46,34 +46,42 @@ Let's start with a simple counter component that demonstrates several core react
 
 ### Key Features Demonstrated:
 
-1. Automatic State Management
-   - The `count` property is automatically tracked and managed
-   - No explicit state initialization is required
-   - Changes trigger efficient DOM updates
+1. Function-based Component Definition
+   - Use `define()` to create components with a concise API
+   - All state and behavior managed through the context object
+   - Clean, minimal syntax for small to medium components
 
-2. Method Auto-binding
-   - Component methods are automatically bound to the instance
+2. Automatic State Management
+   - The `$state` proxy automatically tracks and manages state
+   - Changes trigger efficient DOM updates
+   - Property-based API for reading and writing state
+
+3. Method Binding
+   - `$bind` maps methods for use in HTML event handlers
+   - Methods are automatically bound to the component instance
    - Clean event handler syntax
 
-3. State Initialization + Reactive Display
-   - `$state` initializes a state key from the element’s initial text content
+4. State Initialization + Reactive Display
+   - `$state` initializes state keys from the element's initial text content
    - After initialization it is one-way: state updates the DOM
    - User edits do not propagate back (not two-way)
 
 Here's the complete example:
 
 ```javascript
-class BasicCounter extends ReactiveComponent {
-  // Methods are automatically bound to the component instance
-  increment() {
-    this.count++; // Direct property access thanks to proxy handlers
-  }
+define("basic-counter", ({ $state, $bind }) => {
+  // Initialize state
+  $state.count = 0;
 
-  decrement() {
-    this.count--;
-  }
-}
-customElements.define("basic-counter", BasicCounter);
+  // Bind methods for event handlers
+  $bind.increment = () => {
+    $state.count++;
+  };
+
+  $bind.decrement = () => {
+    $state.count--;
+  };
+});
 ```
 
 ```html
@@ -81,7 +89,7 @@ customElements.define("basic-counter", BasicCounter);
   <!-- $state initializes `count` from HTML (0) then one-way reflects state updates -->
   <p>Count: <span $state="count">0</span></p>
 
-  <!-- onclick attribute automatically binds to component methods -->
+  <!-- onclick attribute references bound methods by name -->
   <button onclick="decrement" class="bg-blue-500 text-white px-4 py-2 rounded">Decrement</button>
   <button onclick="increment" class="bg-blue-500 text-white px-4 py-2 rounded">Increment</button>
 </basic-counter>
@@ -89,18 +97,19 @@ customElements.define("basic-counter", BasicCounter);
 
 ### Implementation Details:
 
-1. State Declaration
-   - Type inference automatically handles number type
-   - Initial value of 0 is set and reflected in DOM
+1. Component Definition
+   - `define()` registers the custom element
+   - Context object provides `$state`, `$bind`, `$compute`, `$effect`, `$ref`
+   - Definition runs once per element instance
 
-2. Method Implementation
-   - `increment()` and `decrement()` directly modify state
-   - Proxy handlers convert property access to state updates
-   - Changes automatically trigger view updates
+2. State Management
+   - `$state.count` provides direct property access
+   - Changes are automatically tracked and trigger DOM updates
+   - Binding attribute values must be alphanumeric
 
 3. Template Structure
    - `$state="count"` initializes the counter (0) then one-way reflects state
-   - `onclick` handlers map directly to component methods
+   - `onclick` handlers reference method names from `$bind`
    - Tailwind classes provide styling without extra CSS
 
 ## Core Concepts
@@ -131,18 +140,14 @@ The component uses a sophisticated signal-based reactive system for efficient st
 Here's a practical example showing these features in action:
 
 ```javascript
-class InputEcho extends ReactiveComponent {
-  constructor() {
-    super();
-    // Initialize reactive state with empty string
-    this.setState("text", "");
+define("input-echo", ({ $state, $compute }) => {
+  // Initialize reactive state with empty string
+  $state.text = "";
 
-    // Create a computed property that transforms text to uppercase
-    // Updates automatically when text changes
-    this.compute("uppercase", ["text"], (c) => c.toUpperCase());
-  }
-}
-customElements.define("input-echo", InputEcho);
+  // Create a computed property that transforms text to uppercase
+  // Updates automatically when text changes
+  $compute("uppercase", ["text"], (c) => String(c).toUpperCase());
+});
 ```
 
 ```html
@@ -187,21 +192,17 @@ Computed properties are a powerful feature that enables you to create derived st
 Here's a practical example of computed properties in action with a temperature converter:
 
 ```javascript
-class TemperatureConverter extends ReactiveComponent {
-  constructor() {
-    super();
-    // Initialize base temperature in Celsius
-    this.setState("celsius", 20);
+define("temperature-converter", ({ $state, $compute }) => {
+  // Initialize base temperature in Celsius
+  $state.celsius = 20;
 
-    // Compute Fahrenheit from Celsius
-    // Updates automatically when celsius changes
-    this.compute("fahrenheit", ["celsius"], (c) => {
-      // Standard C to F conversion formula
-      return (c * 9) / 5 + 32;
-    });
-  }
-}
-customElements.define("temperature-converter", TemperatureConverter);
+  // Compute Fahrenheit from Celsius
+  // Updates automatically when celsius changes
+  $compute("fahrenheit", ["celsius"], (c) => {
+    // Standard C to F conversion formula
+    return ((c as number) * 9) / 5 + 32;
+  });
+});
 ```
 
 ```html
@@ -234,7 +235,7 @@ Key Features Demonstrated:
 Element references provide direct, type-safe access to DOM elements in your components. This feature enables efficient manipulation of DOM elements while maintaining reactivity and encapsulation.
 
 1. Direct Element Access
-   - Direct access to DOM elements through the `refs` object
+   - Direct access to DOM elements through the `$ref` function
    - Refs are populated at runtime after the component connects to the DOM
    - Always check for a ref's existence before using it
 
@@ -242,7 +243,7 @@ Element references provide direct, type-safe access to DOM elements in your comp
    - Elements marked with `$ref` attribute are automatically registered
    - References are available immediately after component mounting
    - Clean separation between template and logic
-   - **Dynamic Refs:** Refs on elements dynamically added after initial connection are recognized and available on `this.refs`. However, it's recommended to define refs in your initial HTML for better performance and predictability.
+   - **Dynamic Refs:** Refs on elements dynamically added after initial connection are recognized and available via `$ref`. However, it's recommended to define refs in your initial HTML for better performance and predictability.
 
 3. Reactive Integration
    - Refs work seamlessly with reactive state
@@ -252,40 +253,41 @@ Element references provide direct, type-safe access to DOM elements in your comp
 Here's a practical example demonstrating element references:
 
 ```javascript
-class RefDemo extends ReactiveComponent {
-  constructor() {
-    super();
-    // Initialize state with default values
-    this.setState("outputText", "Initial Text");
-    this.setState("outputColor", "black");
-  }
+define("ref-demo", ({ $state, $bind, $ref }) => {
+  // Initialize state
+  $state.dimensions = "Not measured yet";
 
-  updateText() {
-    this.refs.output.textContent =
-      this.refs.output.textContent === "Initial Text"
-        ? `Updated Text Content (${this.clickCount} clicks)`
-        : "Initial Text";
-  }
+  // Use Case 1: Focus Management
+  $bind.focusUsername = () => {
+    const usernameInput = $ref.usernameInput as HTMLInputElement;
+    usernameInput?.focus();
+  };
 
-  updateColor() {
-    // Toggle text color between black and orange
-    this.outputColor = this.outputColor === "black" ? "orange" : "black";
-    this.refs.output.style.color = this.outputColor;
-  }
-}
-customElements.define("ref-demo", RefDemo);
+  // Use Case 2: DOM Measurements
+  $bind.measureElement = () => {
+    const measureBox = $ref.measureBox as HTMLDivElement;
+    const rect = measureBox?.getBoundingClientRect();
+    if (rect) {
+      $state.dimensions = `${Math.round(rect.width)}px × ${Math.round(rect.height)}px`;
+    }
+  };
+});
 ```
 
 ```html
 <ref-demo>
   <div class="space-y-4">
-    <p>Click buttons to update referenced element:</p>
+    <p>Click buttons to interact with referenced elements:</p>
     <!-- Element referenced using $ref attribute -->
-    <p $ref="output" class="text-xl font-bold text-center p-4 border rounded">Initial Text</p>
+    <input $ref="usernameInput" type="text" placeholder="Enter username" class="border p-2" />
+    <div $ref="measureBox" class="p-4 border rounded bg-gray-100">
+      <p>This box can be measured</p>
+    </div>
+    <p>Dimensions: <span $bind-text="dimensions"></span></p>
     <div class="flex justify-center space-x-4">
-      <!-- Event handlers trigger ref-based updates -->
-      <button onclick="updateText" class="bg-purple-500 text-white px-4 py-2 rounded">Update Text</button>
-      <button onclick="updateColor" class="bg-pink-500 text-white px-4 py-2 rounded">Change Color</button>
+      <!-- Event handlers trigger ref-based operations -->
+      <button onclick="focusUsername" class="bg-purple-500 text-white px-4 py-2 rounded">Focus Input</button>
+      <button onclick="measureElement" class="bg-pink-500 text-white px-4 py-2 rounded">Measure Box</button>
     </div>
   </div>
 </ref-demo>
@@ -323,30 +325,26 @@ The JSON State Management feature provides sophisticated handling of complex dat
 Here's a practical example demonstrating JSON state management:
 
 ```javascript
-class JsonStateManager extends ReactiveComponent {
-  constructor() {
-    super();
-    // Initialize form field states
-    this.setState("name", "Paco Doe");
-    this.setState("age", 30);
-    this.setState("bio", "");
+define("json-state-management", ({ $state, $compute }) => {
+  // Initialize form field states
+  $state.name = "Paco Doe";
+  $state.age = 30;
+  $state.bio = "";
 
-    // Create computed JSON representation
-    // Updates automatically when any dependency changes
-    this.compute("json", ["name", "age", "bio"], (name, age, bio) =>
-      JSON.stringify(
-        {
-          name,
-          age,
-          bio,
-        },
-        null,
-        2,
-      ),
-    );
-  }
-}
-customElements.define("json-state-management", JsonStateManager);
+  // Create computed JSON representation
+  // Updates automatically when any dependency changes
+  $compute("json", ["name", "age", "bio"], (name, age, bio) =>
+    JSON.stringify(
+      {
+        name,
+        age,
+        bio,
+      },
+      null,
+      2,
+    ),
+  );
+});
 ```
 
 ```html
@@ -629,13 +627,13 @@ this.setState("panelClasses", {
 Custom binding handlers allow you to extend the component's binding capabilities with your own custom logic. This powerful feature enables specialized DOM updates based on state changes.
 
 1. Handler Definition
-   - Register custom handlers by overriding `customBindingHandlers`
-   - Return mapping of binding types to handler functions
+   - Register custom handlers using `$customBindingHandlers`
+   - Assign handler functions for each binding type
    - Access element and value details for fine-grained control
 
 2. Handler Execution
    - Automatically called when bound state changes
-   - Receives formatted and raw state values
+   - Receives element and raw state values
    - Full access to elements for direct DOM manipulation
 
 3. Integration with State System
@@ -646,69 +644,54 @@ Custom binding handlers allow you to extend the component's binding capabilities
 Here's a practical example of custom binding handlers:
 
 ```typescript
-class CustomBindingDemo extends ReactiveComponent {
-  constructor() {
-    super();
-    // Initialize state for various custom bindings
-    this.setState("counter", 0);
-    this.setState("theme", "light");
-    this.setState("status", "idle");
-  }
+define("custom-binding-demo", ({ $state, $bind, $customBindingHandlers }) => {
+  // Initialize state for various custom bindings
+  $state.counter = 0;
+  $state.theme = "light";
+  $state.status = "idle";
 
-  protected customBindingHandlers({
-    element,
-    rawValue,
-    formattedValue,
-  }: {
-    element?: HTMLElement;
-    rawValue?: StateValue;
-    formattedValue?: string;
-  }): Record<string, () => void> {
-    return {
-      // Custom handler for counter animation
-      "animate-count": () => {
-        if (element && typeof rawValue === "number") {
-          element.style.transform = `scale(${1 + rawValue * 0.1})`;
-          element.textContent = formattedValue ?? String(rawValue);
-        }
-      },
+  // Custom handler for counter animation
+  $customBindingHandlers["animate-count"] = ({ element, rawValue }) => {
+    if (element && typeof rawValue === "number") {
+      element.style.transform = `scale(${1 + rawValue * 0.1})`;
+      element.textContent = String(rawValue);
+    }
+  };
 
-      // Custom handler for theme switching
-      "theme-switch": () => {
-        if (element && rawValue) {
-          const theme = String(rawValue);
-          element.classList.remove("theme-light", "theme-dark");
-          element.classList.add(`theme-${theme}`);
-          element.setAttribute("aria-theme", theme);
-        }
-      },
+  // Custom handler for theme switching
+  $customBindingHandlers["theme-switch"] = ({ element, rawValue }) => {
+    if (element && rawValue) {
+      const theme = String(rawValue);
+      element.classList.remove("theme-light", "theme-dark");
+      element.classList.add(`theme-${theme}`);
+      element.setAttribute("aria-theme", theme);
+    }
+  };
 
-      // Custom handler for status indicators
-      "status-indicator": () => {
-        if (element && rawValue) {
-          const status = String(rawValue);
-          element.setAttribute("data-status", status);
-          element.setAttribute("aria-busy", status === "loading" ? "true" : "false");
-          element.classList.toggle("pulse", status === "active");
-        }
-      },
-    };
-  }
+  // Custom handler for status indicators
+  $customBindingHandlers["status-indicator"] = ({ element, rawValue }) => {
+    if (element && rawValue) {
+      const status = String(rawValue);
+      element.setAttribute("data-status", status);
+      element.setAttribute("aria-busy", status === "loading" ? "true" : "false");
+      element.classList.toggle("pulse", status === "active");
+    }
+  };
 
-  // Methods to update state
-  increment() {
-    this.counter++;
-  }
+  // Bind methods to update state
+  $bind.increment = () => {
+    $state.counter = ($state.counter as number) + 1;
+  };
 
-  toggleTheme() {
-    this.theme = this.theme === "light" ? "dark" : "light";
-  }
+  $bind.toggleTheme = () => {
+    $state.theme = $state.theme === "light" ? "dark" : "light";
+  };
 
-  updateStatus(status: string) {
-    this.status = status;
-  }
-}
-customElements.define("custom-binding-demo", CustomBindingDemo);
+  $bind.updateStatus = (e: Event) => {
+    const target = e.currentTarget as HTMLButtonElement;
+    $state.status = target.textContent?.toLowerCase() || "idle";
+  };
+});
 ```
 
 ```html
@@ -778,7 +761,7 @@ define("rc-counter", function Counter({ $state, $bind, $effect, $compute, $ref }
 
   // Refs
   $bind.focusInput = () => {
-    const input = $ref("countInput");
+    const input = $ref.countInput;
     input?.focus();
   };
 
@@ -816,10 +799,14 @@ Inside the definition function you receive a single `context` object:
   - Tracks keys that are actually used in bindings and computed values
 - `$compute(key, sources, computation)`: Define a derived state value
 - `$effect(callback)`: Register an effect; returns a cleanup function
-- `$ref(name)`: Access elements registered via `$ref` attributes
+- `$ref`: Property-only API for accessing elements registered via `$ref` attributes
+  - Access: `const el = $ref.refName`
 - `$bind`: Bind functions onto the component instance
   - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
   - Use in HTML: `onclick="methodName"`
+- `$customBindingHandlers`: Define custom binding handlers for extending the binding system
+  - Assign: `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
+  - Use in HTML: `$bind-handler-name="stateKey"`
 
 All methods are safe to call during definition execution.
 
@@ -853,17 +840,57 @@ Details:
 - `return { connected, disconnected, adopted, attributeChanged }` is optional.
 - `attributeChanged(name, oldValue, newValue)` fires when an observed attribute changes.
 
+### Custom Binding Handlers
+
+You can extend the binding system with custom handlers using `$customBindingHandlers`:
+
+```typescript
+define("tab-component", function TabComponent({ $state, $customBindingHandlers, $bind }) {
+  $state.activeTab = "tab1";
+
+  // Define custom binding handler for tab triggers
+  $customBindingHandlers["tab-trigger"] = ({ element, rawValue }) => {
+    if (!(element instanceof HTMLElement)) return;
+    const name = element.dataset.name;
+    if (!name) return;
+
+    const isActive = rawValue === name;
+    element.setAttribute("aria-selected", isActive ? "true" : "false");
+    element.tabIndex = isActive ? 0 : -1;
+  };
+
+  $bind.selectTab = (e: Event) => {
+    const target = e.currentTarget as HTMLElement;
+    $state.activeTab = target.dataset.name || "tab1";
+  };
+});
+```
+
+```html
+<tab-component>
+  <div role="tablist">
+    <button role="tab" data-name="tab1" $bind-tab-trigger="activeTab" onclick="selectTab">Tab 1</button>
+    <button role="tab" data-name="tab2" $bind-tab-trigger="activeTab" onclick="selectTab">Tab 2</button>
+    <button role="tab" data-name="tab3" $bind-tab-trigger="activeTab" onclick="selectTab">Tab 3</button>
+  </div>
+  <div role="tabpanel">
+    <p>Active Tab: <span $bind-text="activeTab"></span></p>
+  </div>
+</tab-component>
+```
+
 ### Interop and When to Use define()
 
 - Works alongside class-based components; both use the same reactive engine.
 - Choose `define()` for:
-  - Small components
+  - Small to medium components
   - Components without inheritance needs
   - Co-locating simple setup logic with HTML
+  - Quick prototyping with custom bindings
 - Choose class-based for:
   - Advanced inheritance / mixins
-  - Overriding `customBindingHandlers`
   - Complex lifecycles or custom element internals
+  - Components requiring extensive private methods
 - Global availability: when running in a browser, `window.define` is set for script-based usage.
 
 ## Value Coercion
@@ -989,7 +1016,7 @@ Context:
 - `$state: Record<string, any>` — Property-only state API (Proxy)
 - `$compute(key: string, sources: string[], computation: (...args) => StateValue): void`
 - `$effect(callback: () => void): () => void`
-- `$ref(name: string): HTMLElement | undefined`
+- `$ref: Record<string, HTMLElement | undefined>` — Property-only API for accessing registered refs
 - `$bind: Record<string, ((...args: unknown[]) => unknown) | undefined>`
   - Assign functions to add methods onto the element instance
 
