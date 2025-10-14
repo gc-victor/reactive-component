@@ -10,7 +10,7 @@
         "tailwind": "tailwindcss -i src/styles/tailwind.css -o src/pages/global.css"
     },
     "dependencies": {
-        "sxo": "latest"
+        "sxo": "0.6.1"
     },
     "devDependencies": {
         "@tailwindcss/cli": "^4.1.14",
