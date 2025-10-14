@@ -898,48 +898,31 @@ customElements.define("theme-consumer", ThemeConsumer);
 ## Example 3: Form with Multiple Validation States (40+ lines)
 
 ```typescript
-class FormDemo extends ReactiveComponent {
-    constructor() {
-        super();
-        // Initialize from DOM if available
-        const enabled = (document.getElementById("enabled") as HTMLInputElement)?.checked ?? false;
-        this.setState("isEnabled", enabled);
-        this.setState("inputText", "");
+define("form-demo", ({ $state, $compute }) => {
+    // Initialize form state
+    $state.isEnabled = (document.getElementById("enabled") as HTMLInputElement)?.checked ?? false;
+    $state.inputText = "";
 
-        // Multiple computed properties for different concerns
-        this.compute("isDisabled", ["isEnabled"], (enabled: boolean) => !enabled);
+    // Compute disabled state from isEnabled
+    $compute("isDisabled", ["isEnabled"], (enabled: unknown) => !(enabled as boolean));
 
-        this.compute("status", ["isEnabled", "inputText"],
-            (enabled: unknown, text: unknown) => {
-                if (!enabled) return "Input disabled";
-                const len = (text as string).length;
-                if (len < 3) return `Too short (${len}/3 min characters)`;
-                return `Valid: ${len} characters`;
-            }
-        );
+    // Compute status message with validation
+    $compute("status", ["isEnabled", "inputText"], (enabled: unknown, text: unknown) => {
+        if (!enabled) return "Input disabled";
+        if ((text as string).length < 3) return "Input too short (min 3 characters)";
+        return `Input active: ${(text as string).length} characters`;
+    });
 
-        this.compute("inputValidation", ["isEnabled", "inputText"],
-            (enabled: unknown, text: unknown) => {
-                const isValid = (text as string).length >= 3 || !enabled;
-                return {
-                    add: isValid ? "border-green-500" : "border-red-500",
-                    remove: isValid ? "border-red-500" : "border-green-500",
-                };
-            }
-        );
+    // Track class binding for input validation styling
+    $compute("isInputValid", ["isEnabled", "inputText"], (enabled: unknown, text: unknown) => {
+        return { [(text as string).length >= 3 || !enabled ? "remove" : "add"]: "!border-red-500" };
+    });
 
-        this.compute("statusValidation", ["isEnabled", "inputText"],
-            (enabled: unknown, text: unknown) => {
-                const isValid = (text as string).length >= 3 || !enabled;
-                return {
-                    add: isValid ? "text-green-500" : "text-red-500",
-                    remove: isValid ? "text-red-500" : "text-green-500",
-                };
-            }
-        );
-    }
-}
-customElements.define("form-demo", FormDemo);
+    // Track class binding for status validation styling
+    $compute("isStatusValid", ["isEnabled", "inputText"], (enabled: unknown, text: unknown) => {
+        return { [(text as string).length >= 3 || !enabled ? "remove" : "add"]: "!text-red-500" };
+    });
+});
 ```
 
 ```html
@@ -952,54 +935,43 @@ customElements.define("form-demo", FormDemo);
     type="text"
     $bind-value="inputText"
     $bind-disabled="isDisabled"
-    $bind-class="inputValidation"
+    $bind-class="isInputValid"
     placeholder="Type at least 3 characters..."
   />
-  <p $bind-text="status" $bind-class="statusValidation"></p>
+  <p $bind-text="status" $bind-class="isStatusValid"></p>
 </form-demo>
 ```
 
 ## Example 4: Password Toggle with Custom Bindings (45 lines)
 
 ```typescript
-class PasswordToggle extends ReactiveComponent {
-    isPasswordVisible!: boolean;
+define("password-toggle", ({ $state, $bind, $customBindingHandlers }) => {
+    // Initialize state
+    $state.isPasswordVisible = false;
 
-    constructor() {
-        super();
-        this.setState("isPasswordVisible", false);
-    }
+    // Bind toggle method
+    $bind.toggleVisibility = () => {
+        $state.isPasswordVisible = !$state.isPasswordVisible;
+    };
 
-    public toggleVisibility() {
-        this.isPasswordVisible = !this.isPasswordVisible;
-    }
-
-    protected override customBindingHandlers({
-        element,
-        rawValue,
-    }: {
-        element?: HTMLElement;
-        rawValue?: unknown;
-    }): Record<string, () => void> {
-        return {
-            "icon-visibility": () => {
-                if (!element) return;
-                const key = element.dataset.icon;
-                const state: Record<string, string> = {
-                    hide: (rawValue as boolean) ? "block" : "none",
-                    show: (rawValue as boolean) ? "none" : "block",
-                };
-                element.style.display = state[key as keyof typeof state];
-            },
-            type: () => {
-                if (element instanceof HTMLInputElement) {
-                    element.type = (rawValue as boolean) ? "text" : "password";
-                }
-            },
+    // Custom binding handler for icon visibility
+    $customBindingHandlers["icon-visibility"] = ({ element, rawValue }) => {
+        if (!element) return;
+        const key = element.dataset.icon;
+        const state: Record<string, string> = {
+            hide: (rawValue as boolean) ? "block" : "none",
+            show: (rawValue as boolean) ? "none" : "block",
         };
-    }
-}
-customElements.define("password-toggle", PasswordToggle);
+        element.style.display = state[key as keyof typeof state];
+    };
+
+    // Custom binding handler for input type
+    $customBindingHandlers.type = ({ element, rawValue }) => {
+        if (element instanceof HTMLInputElement) {
+            element.type = (rawValue as boolean) ? "text" : "password";
+        }
+    };
+});
 ```
 
 ```html
@@ -1032,9 +1004,83 @@ customElements.define("password-toggle", PasswordToggle);
 
 ## Component Patterns
 
-### Class-Based Components
+### Function-Based Components (define)
+
+ReactiveComponent supports concise function-based components via `define(name, definition)`. This is the primary way to create components. This style keeps logic close to the HTML and offers a minimal API through a context object.
+
+- HTML-first remains the rule: structure and user-visible text live in HTML.
+- All state and behavior are managed through the `define()` context.
+- Ideal for small/mid components and rapid prototyping.
 
 **Basic Counter Example:**
+```typescript
+define("basic-counter", ({ $state, $bind, $effect }) => {
+  // Initialize state
+  $state.count = 0;
+
+  // Bind methods for event handlers
+  $bind.increment = () => {
+    $state.count++;
+  };
+
+  $bind.decrement = () => {
+    $state.count--;
+  };
+
+  // Effects
+  $effect(() => {
+    console.log(`Count changed to: ${$state.count}`);
+  });
+});
+```
+
+```html
+<basic-counter>
+  <p>Count: <span $state="count">0</span></p>
+  <button onclick="decrement">-</button>
+  <button onclick="increment">+</button>
+</basic-counter>
+```
+
+**Form Handling with Computed Properties:**
+```typescript
+define("form-demo", ({ $state, $compute }) => {
+  $state.isEnabled = false;
+  $state.inputText = "";
+
+  $compute("isDisabled", ["isEnabled"], (enabled) => !(enabled as boolean));
+  $compute("status", ["isEnabled", "inputText"], (enabled, text) => {
+    if (!enabled) return "Input disabled";
+    if ((text as string).length < 3) return "Too short";
+    return "Valid input";
+  });
+  $compute("validationClass", ["isEnabled", "inputText"], (_enabled, text) => ({
+    add: (text as string).length < 3 ? "invalid" : "valid",
+    remove: (text as string).length >= 3 ? "invalid" : "valid"
+  }));
+});
+```
+
+```html
+<form-demo>
+  <div>
+    <input type="checkbox" id="enabled" $bind-checked="isEnabled" />
+    <label for="enabled">Enable input</label>
+  </div>
+  <input type="text" $bind-value="inputText" $bind-disabled="isDisabled" $bind-class="validationClass" />
+  <p $bind-text="status"></p>
+</form-demo>
+```
+
+### Advanced: Class-Based Components
+
+For advanced use cases, ReactiveComponent also supports class-based components. Use this approach when you need:
+- Complex inheritance or mixins
+- Extensive private methods and properties
+- Advanced lifecycle management
+- Custom element internals
+
+**Basic Counter with Class:**
 ```typescript
 class BasicCounter extends ReactiveComponent {
   count!: number;
@@ -1066,69 +1112,74 @@ customElements.define("basic-counter", BasicCounter);
 </basic-counter>
 ```
 
-**Form Handling with Computed Properties:**
+Notes:
+- Event handlers reference `$bind`ed methods by name via `onclick="methodName"`.
+- Use `$state.someKey` to read/write state. Binding attribute values must be alphanumeric (`^[a-zA-Z0-9]+$`).
+
+#### Context API
+
+Inside the definition function you receive a single `context` object:
+
+- `$element`: The component instance. Extends ReactiveComponent with public wrappers:
+  - `setState(key, value)`, `getState(key)`, `compute(key, deps, fn)`, `effect(fn)`, `refs`
+- `$state`: Property-only state API exposed via Proxy
+  - Read: `const v = $state.key`
+  - Write: `$state.key = next`
+  - Tracks keys actually used in bindings and computed values
+- `$compute(key, sources, computation)`: Define a derived state value
+- `$effect(callback)`: Register a side-effect; may return a cleanup function
+- `$ref`: Property-only API for accessing elements registered via `$ref` attributes
+  - Access: `const el = $ref.refName`
+- `$bind`: Bind functions onto the component instance
+  - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
+  - Use in HTML: `onclick="methodName"`
+- `$customBindingHandlers`: Define custom binding handlers for extending the binding system
+  - Assign: `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
+  - Use in HTML: `$bind-handler-name="stateKey"`
+
+All methods are safe to call during definition execution.
+
+#### Lifecycle
+
+You can return lifecycle hooks from your `definition`:
+
 ```typescript
-class FormDemo extends ReactiveComponent {
-  constructor() {
-    super();
-    this.setState("isEnabled", false);
-    this.setState("inputText", "");
+define("rc-lifecycle", function WithLifecycle({ $state }) {
+  $state.label = "Hello";
 
-    this.compute("isDisabled", ["isEnabled"], (enabled: boolean) => !enabled);
-    this.compute("status", ["isEnabled", "inputText"], (enabled: unknown, text: unknown) => {
-      if (!enabled) return "Input disabled";
-      if ((text as string).length < 3) return "Too short";
-      return "Valid input";
-    });
-    this.compute("validationClass", ["isEnabled", "inputText"], (_enabled: unknown, text: unknown) => ({
-      add: (text as string).length < 3 ? "invalid" : "valid",
-      remove: (text as string).length >= 3 ? "invalid" : "valid"
-    }));
-  }
-}
-customElements.define("form-demo", FormDemo);
-```
-
-```html
-<form-demo>
-  <div>
-    <input type="checkbox" id="enabled" $bind-checked="isEnabled" />
-    <label for="enabled">Enable input</label>
-  </div>
-  <input type="text" $bind-value="inputText" $bind-disabled="isDisabled" $bind-class="validationClass" />
-  <p $bind-text="status"></p>
-</form-demo>
-```
-
-### Function-Based Components (define)
-
-**Basic Counter with define():**
-```typescript
-define("define-counter", ({ $state, $bind }) => {
-  // Bind methods
-  $bind.increment = () => {
-    $state.count++;
-  };
-
-  $bind.decrement = () => {
-    $state.count--;
-  };
-
-  $bind.reset = () => {
-    $state.count = 0;
+  return {
+    connected: () => console.log("connected"),
+    disconnected: () => console.log("disconnected"),
+    adopted: () => console.log("adopted"),
+    attributeChanged: (name, _oldValue, newValue) => {
+      if (name === "label" && newValue != null) $state.label = newValue;
+    },
   };
 });
 ```
 
 ```html
-<define-counter>
-  <p>Count: <span $state="count">0</span></p>
-  <button onclick="decrement">-</button>
-  <button onclick="increment">+</button>
-  <button onclick="reset">Reset</button>
-</define-counter>
+<rc-lifecycle label="Welcome">
+  <span $bind-text="label"></span>
+</rc-lifecycle>
 ```
 
+Details:
+- `return { connected, disconnected, adopted, attributeChanged }` is optional.
+- `attributeChanged(name, oldValue, newValue)` fires when an observed attribute changes.
+
+#### When to Use define() vs Class-Based
+
+- Use `define()` (recommended) for:
+  - Most components (small to large)
+  - Concise, minimal syntax
+  - Co-locating logic with HTML
+  - Quick prototyping
+- Use class-based for:
+  - Advanced inheritance / mixins
+  - Complex lifecycles or custom element internals
+  - Components requiring extensive private methods
+- Global availability: in browsers, `window.define` is set for script-based usage.
 ## Binding Types
 
 | Binding Type | Description | Example |
