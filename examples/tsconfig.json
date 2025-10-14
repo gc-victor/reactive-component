@@ -19,7 +19,8 @@
       "@/*": ["./*"],
       "@components/*": ["./src/components/*"],
       "@utils/*": ["./src/utils/*"],
-      "@pages/*": ["./src/pages/*"]
+      "@pages/*": ["./src/pages/*"],
+      "@dist/*": ["../dist/*"]
     },
     "types": ["./index.d.ts"]
   },
