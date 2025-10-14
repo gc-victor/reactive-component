@@ -891,7 +891,7 @@ export class ReactiveComponent extends HTMLElement {
             // - { replace: ["old-class", "new-class"] } - replaces old with new
             // - { toggle: "visible" } - toggles 'visible' class
             // - { toggle: { key: "selected", value: true } } - conditional toggle
-            // Demo uses: $bind-class="isInputValid" and $bind-class="isSatusValid" for validation styling
+            // Demo uses: $bind-class="isInputValid" and $bind-class="isStatusValid" for validation styling
             [BINDING_TYPE_CLASS]: () => {
                 if (!value || typeof value !== "object") return;
 
