@@ -1,4 +1,4 @@
-import { ReactiveComponent, type StateValue } from "./rc.js";
+import { type Context as RCContext, ReactiveComponent, type StateValue } from "./rc.js";
 
 /**
  * A ReactiveComponent with public access to protected methods for define API
@@ -8,6 +8,8 @@ export type Element = ReactiveComponent & {
     getState(key: string): StateValue;
     compute<T extends StateValue[]>(key: string, sources: string[], computation: (...args: T) => StateValue): void;
     effect(callback: () => void): () => void;
+    exposeContext(context: RCContext): void;
+    consumeContext(context: RCContext): void;
     refs: Record<string, HTMLElement | undefined>;
     [key: string]: unknown;
 };
@@ -26,6 +28,18 @@ export type Bind = {
 };
 
 /**
+ * Custom binding handler function signature
+ */
+export type CustomBindingHandler = (params: { element: HTMLElement; rawValue: StateValue }) => void;
+
+/**
+ * Custom binding handlers object type
+ */
+export type CustomBindingHandlers = {
+    [key: string]: CustomBindingHandler;
+};
+
+/**
  * Lifecycle methods that can be implemented in define components
  */
 export interface LifecycleMethods {
@@ -41,6 +55,13 @@ export interface LifecycleMethods {
 export type DefinitionReturn = Partial<LifecycleMethods>;
 
 /**
+ * Ref proxy type for element references
+ */
+export type Ref = {
+    [key: string]: HTMLElement | undefined;
+};
+
+/**
  * Context object provided to define component definitions
  */
 export interface Context {
@@ -50,11 +71,10 @@ export interface Context {
     $element: Element;
 
     /**
-     * Register element references
-     * @param name Reference name
-     * @param element HTMLElement to register
+     * Element references with property-only API
+     * - Access: $ref.refName
      */
-    $ref: (name: string) => HTMLElement | undefined;
+    $ref: Ref;
 
     /**
      * State management with property-only API
@@ -78,6 +98,11 @@ export interface Context {
      * Bind methods to the component
      */
     $bind: Bind;
+
+    /**
+     * Custom binding handlers for extending the binding system
+     */
+    $customBindingHandlers: CustomBindingHandlers;
 }
 
 /**
@@ -94,6 +119,12 @@ class Define extends ReactiveComponent {
     private disconnected?: () => void;
     private adopted?: () => void;
     private attributeChanged?: (name: string, oldValue: string | null, newValue: string | null) => void;
+
+    // Store custom binding handlers defined in the component
+    private customHandlers: CustomBindingHandlers = {};
+
+    // Store pending context consumptions to be processed when connected
+    private pendingContexts: RCContext[] = [];
 
     // Public wrappers for protected methods
     public setState(key: string, value: unknown): void {
@@ -112,6 +143,46 @@ class Define extends ReactiveComponent {
         return super.effect(callback);
     }
 
+    public exposeContext(context: RCContext): void {
+        super.exposeContext(context);
+    }
+
+    public consumeContext(context: RCContext): void {
+        // If already connected, consume immediately
+        if (this.isConnected) {
+            super.consumeContext(context);
+        } else {
+            // Otherwise queue for later
+            this.pendingContexts.push(context);
+        }
+    }
+
+    /**
+     * Override customBindingHandlers to use stored handlers
+     */
+    protected override customBindingHandlers({
+        element,
+        rawValue,
+    }: {
+        stateKey?: string;
+        element?: HTMLElement;
+        formattedValue?: string;
+        rawValue?: StateValue;
+    }): Record<string, () => void> {
+        const handlers: Record<string, () => void> = {};
+
+        // Convert stored handlers to the format expected by ReactiveComponent
+        for (const [key, handler] of Object.entries(this.customHandlers)) {
+            handlers[key] = () => {
+                if (element && rawValue !== undefined) {
+                    handler({ element, rawValue });
+                }
+            };
+        }
+
+        return handlers;
+    }
+
     /**
      * Initialize define component
      */
@@ -122,10 +193,21 @@ class Define extends ReactiveComponent {
         const context: Context = {
             $element: this as unknown as Element,
 
-            // Reference registration
-            $ref: (name: string) => {
-                return (this as unknown as Element).refs[name];
-            },
+            // Reference proxy with property-only API
+            $ref: new Proxy({} as Ref, {
+                get: (_target, prop: string | symbol): HTMLElement | undefined => {
+                    if (typeof prop === "string") {
+                        return (this as unknown as Element).refs[prop];
+                    }
+                    return undefined;
+                },
+                has: (_target, prop: string | symbol): boolean => {
+                    if (typeof prop === "string") {
+                        return (this as unknown as Element).refs[prop] !== undefined;
+                    }
+                    return false;
+                },
+            }),
 
             // State proxy with property-only API
             $state: new Proxy({} as Record<string, StateValue | undefined>, {
@@ -183,6 +265,22 @@ class Define extends ReactiveComponent {
                     return undefined;
                 },
             }),
+
+            // Custom binding handlers
+            $customBindingHandlers: new Proxy({} as CustomBindingHandlers, {
+                set: (_target, prop: string | symbol, value: unknown): boolean => {
+                    if (typeof prop === "string" && typeof value === "function") {
+                        this.customHandlers[prop] = value as CustomBindingHandler;
+                    }
+                    return true;
+                },
+                get: (_target, prop: string | symbol): unknown => {
+                    if (typeof prop === "string") {
+                        return this.customHandlers[prop];
+                    }
+                    return undefined;
+                },
+            }),
         };
 
         // Get the definition function from the constructor
@@ -205,6 +303,12 @@ class Define extends ReactiveComponent {
 
     // Override lifecycle methods to call define callbacks
     connectedCallback(): void {
+        // Process any pending context consumptions first
+        for (const context of this.pendingContexts) {
+            super.consumeContext(context);
+        }
+        this.pendingContexts = [];
+
         super.connectedCallback();
         this.connected?.();
     }
@@ -254,7 +358,7 @@ class Define extends ReactiveComponent {
  *
  *     // Access element references
  *     $bind.focusInput = () => {
- *         const input = $ref("countInput");
+ *         const input = $ref.countInput;
  *         input?.focus();
  *     };
  *
