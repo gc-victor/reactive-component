@@ -21,8 +21,7 @@
     "jsxFragmentFactory": "Fragment",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
-    "types": ["./types"]
+    "allowJs": true
   },
-  "include": ["./src", "./types"]
+  "include": ["./src"]
 }
