@@ -32,7 +32,7 @@ importers:
         version: 0.25.10
       happy-dom:
         specifier: ^20.0.0
-        version: 20.0.0
+        version: 20.0.2
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
@@ -41,7 +41,7 @@ importers:
         version: 1.1.3(browserslist@4.24.4)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.0)(jiti@2.4.2)(lightningcss@1.30.1)
+        version: 3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.2)(jiti@2.4.2)(lightningcss@1.30.1)
 
 packages:
 
@@ -613,8 +613,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  electron-to-chromium@1.5.234:
-    resolution: {integrity: sha512-RXfEp2x+VRYn8jbKfQlRImzoJU01kyDvVPBmG39eU2iuRVhuS6vQNocB8J0/8GrIMLnPzgz4eW6WiRnJkTuNWg==}
+  electron-to-chromium@1.5.237:
+    resolution: {integrity: sha512-icUt1NvfhGLar5lSWH3tHNzablaA5js3HVHacQimfP8ViEBOQv+L7DKEuHdbTZ0SKCO1ogTJTIL1Gwk9S6Qvcg==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -674,8 +674,8 @@ packages:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
     hasBin: true
 
-  happy-dom@20.0.0:
-    resolution: {integrity: sha512-GkWnwIFxVGCf2raNrxImLo397RdGhLapj5cT3R2PT7FwL62Ze1DROhzmYW7+J3p9105DYMVenEejEbnq5wA37w==}
+  happy-dom@20.0.2:
+    resolution: {integrity: sha512-pYOyu624+6HDbY+qkjILpQGnpvZOusItCk+rvF5/V+6NkcgTKnbOldpIy22tBnxoaLtlM9nXgoqAcW29/B7CIw==}
     engines: {node: '>=20.0.0'}
 
   has-flag@4.0.0:
@@ -1370,7 +1370,7 @@ snapshots:
       magic-string: 0.30.19
       sirv: 3.0.2
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.0)(jiti@2.4.2)(lightningcss@1.30.1)
+      vitest: 3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.2)(jiti@2.4.2)(lightningcss@1.30.1)
       ws: 8.18.3
     optionalDependencies:
       playwright: 1.56.0
@@ -1395,7 +1395,7 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.0)(jiti@2.4.2)(lightningcss@1.30.1)
+      vitest: 3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.2)(jiti@2.4.2)(lightningcss@1.30.1)
     optionalDependencies:
       '@vitest/browser': 3.2.4(playwright@1.56.0)(vite@7.1.9(@types/node@20.19.21)(jiti@2.4.2)(lightningcss@1.30.1))(vitest@3.2.4)
     transitivePeerDependencies:
@@ -1446,7 +1446,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.0)(jiti@2.4.2)(lightningcss@1.30.1)
+      vitest: 3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.2)(jiti@2.4.2)(lightningcss@1.30.1)
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -1489,7 +1489,7 @@ snapshots:
   browserslist@4.24.4:
     dependencies:
       caniuse-lite: 1.0.30001750
-      electron-to-chromium: 1.5.234
+      electron-to-chromium: 1.5.237
       node-releases: 2.0.23
       update-browserslist-db: 1.1.3(browserslist@4.24.4)
 
@@ -1534,7 +1534,7 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  electron-to-chromium@1.5.234: {}
+  electron-to-chromium@1.5.237: {}
 
   emoji-regex@8.0.0: {}
 
@@ -1607,7 +1607,7 @@ snapshots:
       package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
 
-  happy-dom@20.0.0:
+  happy-dom@20.0.2:
     dependencies:
       '@types/node': 20.19.21
       '@types/whatwg-mimetype': 3.0.2
@@ -1922,7 +1922,7 @@ snapshots:
       jiti: 2.4.2
       lightningcss: 1.30.1
 
-  vitest@3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.0)(jiti@2.4.2)(lightningcss@1.30.1):
+  vitest@3.2.4(@types/node@20.19.21)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@20.0.2)(jiti@2.4.2)(lightningcss@1.30.1):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
@@ -1951,7 +1951,7 @@ snapshots:
       '@types/node': 20.19.21
       '@vitest/browser': 3.2.4(playwright@1.56.0)(vite@7.1.9(@types/node@20.19.21)(jiti@2.4.2)(lightningcss@1.30.1))(vitest@3.2.4)
       '@vitest/ui': 3.2.4(vitest@3.2.4)
-      happy-dom: 20.0.0
+      happy-dom: 20.0.2
     transitivePeerDependencies:
       - jiti
       - less
