@@ -945,12 +945,12 @@ define("form-demo", ({ $state, $compute }) => {
 ## Example 4: Password Toggle with Custom Bindings (45 lines)
 
 ```typescript
-define("password-toggle", ({ $state, $bind, $customBindingHandlers }) => {
+define("password-toggle", ({ $state, $on, $customBindingHandlers }) => {
     // Initialize state
     $state.isPasswordVisible = false;
 
     // Bind toggle method
-    $bind.toggleVisibility = () => {
+    $on.toggleVisibility = () => {
         $state.isPasswordVisible = !$state.isPasswordVisible;
     };
 
@@ -1012,18 +1012,38 @@ ReactiveComponent supports concise function-based components via `define(name, d
 - All state and behavior are managed through the `define()` context.
 - Ideal for small/mid components and rapid prototyping.
 
+**Context Object Properties:**
+
+The `define()` function receives a context object with these properties:
+- `$element`: The component instance with public wrappers (setState, getState, compute, effect, refs)
+- `$state`: Property-only state API (Proxy) for reactive data
+- `$compute(key, sources, computation)`: Define derived state values
+- `$effect(callback)`: Register effects that run on state changes (returns cleanup function)
+- `$ref`: Property-only API for accessing elements registered via `$ref` attributes
+- `$on`: Bind methods for `$on*` event attributes (alias of `$bind`)
+  - Assign: `$on.methodName = (...args) => { /* this === element */ }`
+  - Use in HTML: `$onclick="methodName"`
+  - Prefer `$on` for event handlers to match the `$on*` convention
+- `$bind`: Bind functions onto the component instance
+  - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
+  - Use in HTML: `$bind-class="methodName"`
+  - Prefer `$bind` for binding functions to match the `$bind-*` convention
+- `$customBindingHandlers`: Define custom binding handlers for extending the binding system
+
+**Validation Note:** Method names assigned via `$on`/`$bind` must be alphanumeric (`^[a-zA-Z0-9]+$`).
+
 **Basic Counter Example:**
 ```typescript
-define("basic-counter", ({ $state, $bind, $effect }) => {
+define("basic-counter", ({ $state, $on, $effect }) => {
   // Initialize state
   $state.count = 0;
 
-  // Bind methods for event handlers
-  $bind.increment = () => {
+  // Bind methods for $on* event handlers
+  $on.increment = () => {
     $state.count++;
   };
 
-  $bind.decrement = () => {
+  $on.decrement = () => {
     $state.count--;
   };
 
@@ -1130,9 +1150,14 @@ Inside the definition function you receive a single `context` object:
 - `$effect(callback)`: Register a side-effect; may return a cleanup function
 - `$ref`: Property-only API for accessing elements registered via `$ref` attributes
   - Access: `const el = $ref.refName`
+- `$on`: Bind methods for `$on*` event attributes (alias of `$bind`)
+  - Assign: `$on.methodName = (...args) => { /* this === element */ }`
+  - Use in HTML: `$onclick="methodName"`
+  - Prefer `$on` for event handlers to match the `$on*` convention
 - `$bind`: Bind functions onto the component instance
   - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
-  - Use in HTML: `$onclick="methodName"`
+  - Use in HTML: `$bind-class="methodName"`
+  - Prefer `$bind` for binding functions to match the `$bind-*` convention
 - `$customBindingHandlers`: Define custom binding handlers for extending the binding system
   - Assign: `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
   - Use in HTML: `$bind-handler-name="stateKey"`
