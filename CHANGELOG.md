@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2025-10-28
+
+### 🚀 Features
+
+- *(core)* [**breaking**] Adopt $on* event attribute prefix for ReactiveComponent
+- *(core)* Add $on alias for event handlers
+
+### 🚜 Refactor
+
+- *(examples)* Migrate onclick→$onclick across example sections
+- *(examples)* Migrate example components to $on for event handlers
+- *(css)* Normalize global.css and adjust [hidden] rule
+
+### 📚 Documentation
+
+- Update docs to use $on* and clarify binding validation
+- *(define)* Document $on alias, validation rules, and verification commands
+- *(examples)* Prefer $on for event handlers and add data-* guidance
+- *(spec)* Sync prompt.txt with $on alias and validation rules
+
+### 🎨 Styling
+
+- *(css)* Reformat Tailwind CSS file in examples
+
+### 🧪 Testing
+
+- *(bindings)* Update event binding tests to $on* convention
+- *(define)* Migrate define() event attributes to $onclick/$onsubmit
+- *(define)* Add coverage for $on alias and binding validation
+
+### ⚙️ Miscellaneous Tasks
+
+- *(tooling)* Include examples/src in biome check scripts
+- *(examples)* Bump tailwind to 4.1.16 and update lockfile
+- *(examples)* Add sxo alias for @dist and format config
+- *(examples)* Tidy tsconfig formatting and types
+
+### Build
+
+- *(deps-dev)* Bump happy-dom from 20.0.0 to 20.0.2
+- *(tsconfig)* Set baseUrl to repo root, fix paths, include tests
+
 ## [0.7.0] - 2025-10-14
 
 ### 🚀 Features
