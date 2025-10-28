@@ -655,6 +655,116 @@ describe("Define", () => {
         });
     });
 
+    describe("$on Alias", () => {
+        it("should bind methods via $on and update state when invoked", () => {
+            define("rc-on-alias", function OnAlias({ $state, $on }: Context) {
+                $state.count = 0;
+                $on.increment = () => {
+                    $state.count = ($state.count as number) + 1;
+                };
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <rc-on-alias>
+                    <button $onclick="increment">+</button>
+                    <span $bind-text="count"></span>
+                </rc-on-alias>
+            `);
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("rc-on-alias") as Element;
+            const button = component.querySelector("button") as HTMLElement;
+            const span = component.querySelector("span");
+
+            // Initial state
+            expect(component.getState("count")).toBe(0);
+            expect(span?.textContent).toBe("0");
+
+            // Verify method exists
+            expect((component as { increment?: () => void }).increment).toBeTypeOf("function");
+
+            // Trigger increment via event
+            simulateEvent(button, "click");
+
+            // State should update
+            expect(component.getState("count")).toBe(1);
+            expect(span?.textContent).toBe("1");
+        });
+
+        it("should share the same proxy instance between $on and $bind", () => {
+            let onMethod: unknown;
+            let bindMethod: unknown;
+
+            define("rc-on-bind-sync", function OnBindSync({ $on, $bind }: Context) {
+                // Set method via $on
+                $on.testMethod = () => "via-on";
+
+                // Read via $bind - should get the same method
+                bindMethod = $bind.testMethod;
+
+                // Set method via $bind
+                $bind.otherMethod = () => "via-bind";
+
+                // Read via $on - should get the same method
+                onMethod = $on.otherMethod;
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture("<rc-on-bind-sync></rc-on-bind-sync>");
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("rc-on-bind-sync") as Element;
+
+            // Both should exist and work
+            expect(typeof bindMethod).toBe("function");
+            expect(typeof onMethod).toBe("function");
+            expect((bindMethod as () => string)()).toBe("via-on");
+            expect((onMethod as () => string)()).toBe("via-bind");
+
+            // Methods should also be on the component
+            expect((component as { testMethod?: () => string }).testMethod?.()).toBe("via-on");
+            expect((component as { otherMethod?: () => string }).otherMethod?.()).toBe("via-bind");
+        });
+
+        it("should ignore non-function values in $on proxy", () => {
+            define("rc-on-non-func", function OnNonFunc({ $on }: Context) {
+                // biome-ignore lint/suspicious/noExplicitAny: Testing non-function assignment
+                ($on as any).notAFunction = "string value";
+                // biome-ignore lint/suspicious/noExplicitAny: Testing non-function assignment
+                ($on as any).alsoNotAFunction = 123;
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture("<rc-on-non-func></rc-on-non-func>");
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("rc-on-non-func") as Element & Record<string, unknown>;
+
+            // Non-function values should not be bound
+            expect(component.notAFunction).toBeUndefined();
+            expect(component.alsoNotAFunction).toBeUndefined();
+        });
+
+        it("should handle symbol keys gracefully in $on proxy", () => {
+            let symbolGet: unknown;
+
+            define("rc-on-symbol", function OnSymbol({ $on }: Context) {
+                const sym = Symbol("test");
+                symbolGet = Reflect.get($on as object, sym);
+
+                // Attempting to set via symbol should be ignored
+                Reflect.set($on as object, sym, () => "symbol-value");
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture("<rc-on-symbol></rc-on-symbol>");
+            cleanup = cleanupFn;
+
+            const el = root.querySelector("rc-on-symbol");
+            expect(el).toBeTruthy();
+
+            // Symbol get should return undefined
+            expect(symbolGet).toBeUndefined();
+        });
+    });
+
     describe("Proxy Edge Cases", () => {
         it("should handle non-string (symbol) keys in proxies", () => {
             let refSymbolGet: unknown;
