@@ -69,16 +69,16 @@ Let's start with a simple counter component that demonstrates several core react
 Here's the complete example:
 
 ```javascript
-define("basic-counter", ({ $state, $bind }) => {
+define("basic-counter", ({ $state, $on }) => {
   // Initialize state
   $state.count = 0;
 
-  // Bind methods for event handlers
-  $bind.increment = () => {
+  // Bind methods for $on* event handlers
+  $on.increment = () => {
     $state.count++;
   };
 
-  $bind.decrement = () => {
+  $on.decrement = () => {
     $state.count--;
   };
 });
@@ -253,18 +253,18 @@ Element references provide direct, type-safe access to DOM elements in your comp
 Here's a practical example demonstrating element references:
 
 ```javascript
-define("ref-demo", ({ $state, $bind, $ref }) => {
+define("ref-demo", ({ $state, $on, $ref }) => {
   // Initialize state
   $state.dimensions = "Not measured yet";
 
   // Use Case 1: Focus Management
-  $bind.focusUsername = () => {
+  $on.focusUsername = () => {
     const usernameInput = $ref.usernameInput as HTMLInputElement;
     usernameInput?.focus();
   };
 
   // Use Case 2: DOM Measurements
-  $bind.measureElement = () => {
+  $on.measureElement = () => {
     const measureBox = $ref.measureBox as HTMLDivElement;
     const rect = measureBox?.getBoundingClientRect();
     if (rect) {
@@ -644,7 +644,7 @@ Custom binding handlers allow you to extend the component's binding capabilities
 Here's a practical example of custom binding handlers:
 
 ```typescript
-define("custom-binding-demo", ({ $state, $bind, $customBindingHandlers }) => {
+define("custom-binding-demo", ({ $state, $on, $customBindingHandlers }) => {
   // Initialize state for various custom bindings
   $state.counter = 0;
   $state.theme = "light";
@@ -679,15 +679,15 @@ define("custom-binding-demo", ({ $state, $bind, $customBindingHandlers }) => {
   };
 
   // Bind methods to update state
-  $bind.increment = () => {
+  $on.increment = () => {
     $state.counter = ($state.counter as number) + 1;
   };
 
-  $bind.toggleTheme = () => {
+  $on.toggleTheme = () => {
     $state.theme = $state.theme === "light" ? "dark" : "light";
   };
 
-  $bind.updateStatus = (e: Event) => {
+  $on.updateStatus = (e: Event) => {
     const target = e.currentTarget as HTMLButtonElement;
     $state.status = target.textContent?.toLowerCase() || "idle";
   };
@@ -742,12 +742,12 @@ In addition to class-based components, Reactive Component supports concise funct
 ### Basic Usage
 
 ```typescript
-define("rc-counter", function Counter({ $state, $bind, $effect, $compute, $ref }) {
+define("rc-counter", function Counter({ $state, $on, $effect, $compute, $ref }) {
   // Initialize state (property-only API)
   $state.count = 0;
 
-  // Bind methods as event handlers (auto-bound to the element)
-  $bind.increment = () => {
+  // Bind methods for $on* event handlers (auto-bound to the element)
+  $on.increment = () => {
     $state.count = ($state.count as number) + 1;
   };
 
@@ -760,7 +760,7 @@ define("rc-counter", function Counter({ $state, $bind, $effect, $compute, $ref }
   });
 
   // Refs
-  $bind.focusInput = () => {
+  $on.focusInput = () => {
     const input = $ref.countInput;
     input?.focus();
   };
@@ -784,8 +784,33 @@ define("rc-counter", function Counter({ $state, $bind, $effect, $compute, $ref }
 
 Notes:
 
-- Event handlers reference `$bind`ed methods by name via `$onclick="methodName"`.
+- Event handlers reference bound methods by name via `$onclick="methodName"`.
 - Use `$state.someKey` to read/write state. The binding attributes must use alphanumeric keys.
+
+### Passing Data to $on* Handlers
+
+Inline expressions are not allowed in `$`-prefixed attributes. Use `data-*` attributes and read values in your handler:
+
+**HTML:**
+
+```html
+<button $onclick="setStatus" data-status="idle">Idle</button>
+<button $onclick="setStatus" data-status="active">Active</button>
+```
+
+**TypeScript:**
+
+```typescript
+define("status-toggle", ({ $state, $on }) => {
+  $state.status = "idle";
+
+  $on.setStatus = (e: Event) => {
+    const el = e.currentTarget as HTMLElement;
+    const status = el?.dataset.status ?? "idle";
+    $state.status = status;
+  };
+});
+```
 
 ### Context API
 
@@ -801,9 +826,14 @@ Inside the definition function you receive a single `context` object:
 - `$effect(callback)`: Register an effect; returns a cleanup function
 - `$ref`: Property-only API for accessing elements registered via `$ref` attributes
   - Access: `const el = $ref.refName`
+- `$on`: Bind methods for `$on*` event attributes (alias of `$bind`)
+  - Assign: `$on.methodName = (...args) => { /* this === element */ }`
+  - Use in HTML: `$onclick="methodName"`
+  - Prefer `$on` for event handlers to match the `$on*` convention
 - `$bind`: Bind functions onto the component instance
   - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
-  - Use in HTML: `$onclick="methodName"`
+  - Use in HTML: `$bind-class="methodName"`
+  - Prefer `$bind` for binding functions to match the `$bind-*` convention
 - `$customBindingHandlers`: Define custom binding handlers for extending the binding system
   - Assign: `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
   - Use in HTML: `$bind-handler-name="stateKey"`
@@ -845,7 +875,7 @@ Details:
 You can extend the binding system with custom handlers using `$customBindingHandlers`:
 
 ```typescript
-define("tab-component", function TabComponent({ $state, $customBindingHandlers, $bind }) {
+define("tab-component", function TabComponent({ $state, $customBindingHandlers, $on }) {
   $state.activeTab = "tab1";
 
   // Define custom binding handler for tab triggers
@@ -859,7 +889,7 @@ define("tab-component", function TabComponent({ $state, $customBindingHandlers, 
     element.tabIndex = isActive ? 0 : -1;
   };
 
-  $bind.selectTab = (e: Event) => {
+  $on.selectTab = (e: Event) => {
     const target = e.currentTarget as HTMLElement;
     $state.activeTab = target.dataset.name || "tab1";
   };
