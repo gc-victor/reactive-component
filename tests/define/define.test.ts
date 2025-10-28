@@ -95,8 +95,8 @@ describe("Define", () => {
                     <span class="double" $bind-text="doubleCount"></span>
                     <span class="name" $bind-text="name"></span>
                     <span class="full" $bind-text="fullName"></span>
-                    <button class="inc" onclick="increment">Inc</button>
-                    <button class="update" onclick="updateName">Update</button>
+                    <button class="inc" $onclick="increment">Inc</button>
+                    <button class="update" $onclick="updateName">Update</button>
                 </comprehensive-test>
             `);
             cleanup = cleanupFn;
@@ -172,7 +172,7 @@ describe("Define", () => {
 
             const { root, cleanup: cleanupFn } = createFixture(`
                 <form-test>
-                    <form onsubmit="handleSubmit">
+                    <form $onsubmit="handleSubmit">
                         <input type="text" class="username" $bind-value="username" />
                         <input type="email" class="email" $bind-value="email" />
                         <input type="checkbox" class="agreed" $bind-checked="agreed" />
@@ -373,7 +373,7 @@ describe("Define", () => {
 
             const { root, cleanup: cleanupFn } = createFixture(`
                 <advanced-test>
-                    <button onclick="method">Test</button>
+                    <button $onclick="method">Test</button>
                 </advanced-test>
             `);
 
