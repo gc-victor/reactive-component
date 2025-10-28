@@ -814,8 +814,8 @@ customElements.define("custom-progress-binding", CustomProgressBinding);
 <custom-progress-binding>
   <progress $bind-progress="progressValue"></progress>
   <p $bind-text="loadingStatus"></p>
-  <button $ref="startButton" onclick="startProgress">Start</button>
-  <button $ref="stopButton" onclick="stopProgress">Stop</button>
+  <button $ref="startButton" $onclick="startProgress">Start</button>
+  <button $ref="stopButton" $onclick="stopProgress">Stop</button>
 </custom-progress-binding>
 ```
 
@@ -978,7 +978,7 @@ define("password-toggle", ({ $state, $bind, $customBindingHandlers }) => {
 <password-toggle>
   <div class="relative">
     <input $bind-type="isPasswordVisible" type="password" placeholder="Enter password" />
-    <button onclick="toggleVisibility" type="button">
+    <button $onclick="toggleVisibility" type="button">
       <svg $bind-icon-visibility="isPasswordVisible" data-icon="show"><!-- eye icon --></svg>
       <svg $bind-icon-visibility="isPasswordVisible" data-icon="hide"><!-- eye-off icon --></svg>
     </button>
@@ -1037,8 +1037,8 @@ define("basic-counter", ({ $state, $bind, $effect }) => {
 ```html
 <basic-counter>
   <p>Count: <span $state="count">0</span></p>
-  <button onclick="decrement">-</button>
-  <button onclick="increment">+</button>
+  <button $onclick="decrement">-</button>
+  <button $onclick="increment">+</button>
 </basic-counter>
 ```
 
@@ -1107,13 +1107,13 @@ customElements.define("basic-counter", BasicCounter);
 ```html
 <basic-counter>
   <p>Count: <span $state="count">0</span></p>
-  <button onclick="decrement">-</button>
-  <button onclick="increment">+</button>
+  <button $onclick="decrement">-</button>
+  <button $onclick="increment">+</button>
 </basic-counter>
 ```
 
 Notes:
-- Event handlers reference `$bind`ed methods by name via `onclick="methodName"`.
+- Event handlers reference `$bind`ed methods by name via `$onclick="methodName"`.
 - Use `$state.someKey` to read/write state. Binding attribute values must be alphanumeric (`^[a-zA-Z0-9]+$`).
 
 #### Context API
@@ -1132,7 +1132,7 @@ Inside the definition function you receive a single `context` object:
   - Access: `const el = $ref.refName`
 - `$bind`: Bind functions onto the component instance
   - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
-  - Use in HTML: `onclick="methodName"`
+  - Use in HTML: `$onclick="methodName"`
 - `$customBindingHandlers`: Define custom binding handlers for extending the binding system
   - Assign: `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
   - Use in HTML: `$bind-handler-name="stateKey"`

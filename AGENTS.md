@@ -137,7 +137,7 @@ function setCount(component: ReactiveComponent, value: unknown) {
 | **Ref**                                 | Named DOM reference accessible via `this.refs`                                                                       |
 | **Function-based Component (`define`)** | Component registered via `define(name, definition)` using a context object instead of a class                        |
 | **$state**                              | Property-only state API (Proxy) inside `define()`; read/write with `$state.key`; keys must be alphanumeric           |
-| **$bind**                               | Map of methods assigned in `define()` for event attributes (e.g., `$bind.increment = () => {}; onclick="increment"`) |
+| **$bind**                               | Map of methods assigned in `define()` for event attributes (e.g., `$bind.increment = () => {}; $onclick="increment"`) |
 | **$compute**                            | Define a derived state value in `define()`; signature `(key, sources, computation)`                                  |
 | **$effect**                             | Register a side-effect in `define()`; callback may return a cleanup function                                         |
 | **$ref**                                | Retrieve elements registered via `$ref` attributes inside `define()`                                                 |
@@ -438,7 +438,7 @@ Update these pointers to match real paths as the repository evolves.
 | **Computed Property**                   | Derived state recomputed from dependencies via `compute()` or `$compute()`                                           |
 | **Ref**                                 | Named handle to a DOM node within the component (`this.refs.name` or `$ref.name`)                                    |
 | **$state**                              | Property-only state API (Proxy) inside `define()`; read/write with `$state.key`; keys must be alphanumeric           |
-| **$bind**                               | Map of methods assigned in `define()` for event attributes (e.g., `$bind.increment = () => {}; onclick="increment"`) |
+| **$bind**                               | Map of methods assigned in `define()` for event attributes (e.g., `$bind.increment = () => {}; $onclick="increment"`) |
 | **$compute**                            | Define a derived state value in `define()`; signature `(key, sources, computation)`                                  |
 | **$effect**                             | Register a side-effect in `define()`; callback may return a cleanup function                                         |
 | **$ref**                                | Property-only API for accessing elements registered via `$ref` attributes inside `define()`                          |
@@ -531,7 +531,7 @@ Inside the definition function, you receive a single context object with:
   - Access: `const el = $ref.refName`
 - `$bind`: Bind methods onto the component instance for event attributes
   - Assign with `$bind.methodName = (...args) => { /* this === element */ }`
-  - Use in HTML via `onclick="methodName"` or other `on*` attributes
+  - Use in HTML via `$onclick="methodName"` or other `$on*` attributes
 - `$customBindingHandlers`: Define custom binding handlers for extending the binding system
   - Assign with `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
   - Use in HTML via `$bind-handler-name="stateKey"`
@@ -561,7 +561,8 @@ The definition can return lifecycle hooks:
 - Binding attribute values must be alphanumeric: `^[a-zA-Z0-9]+$` (no expressions/interpolation).
 - Keep user-facing text in HTML templates.
 - Manage state via `$state` or the `$element` wrappers; avoid direct DOM mutation for state changes.
-- Event handlers reference `$bind`ed method names via `on*="methodName"`.
+- Event handlers reference `$bind`ed method names via `$on*="methodName"`.
+- Event handler attribute values must be alphanumeric (enforced by `$` prefix validation).
 
 ### Global Availability
 
@@ -608,9 +609,9 @@ The definition can return lifecycle hooks:
 ```html
 <define-counter>
   <p>Count: <span $state="count">0</span></p>
-  <button onclick="decrement">-</button>
-  <button onclick="increment">+</button>
-  <button onclick="reset">Reset</button>
+  <button $onclick="decrement">-</button>
+  <button $onclick="increment">+</button>
+  <button $onclick="reset">Reset</button>
 </define-counter>
 ```
 
@@ -724,8 +725,8 @@ define("temperature-converter", ({ $state, $compute }) => {
     <progress class="w-full" $bind-progress="progressValue"></progress>
     <p $bind-text="loadingStatus"></p>
     <p class="flex">
-      <button type="button" onClick="startProgress" $ref="startButton">Start Progress</button>
-      <button type="button" onClick="stopProgress" $ref="stopButton">Stop Progress</button>
+      <button type="button" $onclick="startProgress" $ref="startButton">Start Progress</button>
+      <button type="button" $onclick="stopProgress" $ref="stopButton">Stop Progress</button>
     </p>
   </div>
 </custom-progress-binding>
@@ -798,9 +799,9 @@ define("custom-progress-binding", ({ $state, $bind, $compute, $ref, $customBindi
 <ref-demo>
   <p $ref="output">Initial Text</p>
   <input $ref="input" type="text" placeholder="Focus me" />
-  <button onclick="updateText">Update Text</button>
-  <button onclick="changeColor">Change Color</button>
-  <button onclick="focusInput">Focus Input</button>
+  <button $onclick="updateText">Update Text</button>
+  <button $onclick="changeColor">Change Color</button>
+  <button $onclick="focusInput">Focus Input</button>
 </ref-demo>
 ```
 

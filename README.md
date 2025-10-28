@@ -89,9 +89,9 @@ define("basic-counter", ({ $state, $bind }) => {
   <!-- $state initializes `count` from HTML (0) then one-way reflects state updates -->
   <p>Count: <span $state="count">0</span></p>
 
-  <!-- onclick attribute references bound methods by name -->
-  <button onclick="decrement" class="bg-blue-500 text-white px-4 py-2 rounded">Decrement</button>
-  <button onclick="increment" class="bg-blue-500 text-white px-4 py-2 rounded">Increment</button>
+  <!-- $onclick attribute references bound methods by name -->
+  <button $onclick="decrement" class="bg-blue-500 text-white px-4 py-2 rounded">Decrement</button>
+  <button $onclick="increment" class="bg-blue-500 text-white px-4 py-2 rounded">Increment</button>
 </basic-counter>
 ```
 
@@ -286,8 +286,8 @@ define("ref-demo", ({ $state, $bind, $ref }) => {
     <p>Dimensions: <span $bind-text="dimensions"></span></p>
     <div class="flex justify-center space-x-4">
       <!-- Event handlers trigger ref-based operations -->
-      <button onclick="focusUsername" class="bg-purple-500 text-white px-4 py-2 rounded">Focus Input</button>
-      <button onclick="measureElement" class="bg-pink-500 text-white px-4 py-2 rounded">Measure Box</button>
+      <button $onclick="focusUsername" class="bg-purple-500 text-white px-4 py-2 rounded">Focus Input</button>
+      <button $onclick="measureElement" class="bg-pink-500 text-white px-4 py-2 rounded">Measure Box</button>
     </div>
   </div>
 </ref-demo>
@@ -466,7 +466,7 @@ customElements.define("theme-consumer", ThemeConsumer);
 
 ```html
 <theme-provider>
-  <button type="button" onclick="toggleTheme">Toggle Theme</button>
+  <button type="button" $onclick="toggleTheme">Toggle Theme</button>
   <theme-consumer>
     <p $bind-text="themeMode"></p>
     <p $ref="themeInfo"></p>
@@ -700,22 +700,22 @@ define("custom-binding-demo", ({ $state, $bind, $customBindingHandlers }) => {
     <!-- Animated counter binding -->
     <div>
       <span $bind-animate-count="counter" class="text-2xl font-bold transition-transform"> 0 </span>
-      <button onclick="increment" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded">Increment</button>
+      <button $onclick="increment" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded">Increment</button>
     </div>
 
     <!-- Theme switching binding -->
     <div $bind-theme-switch="theme" class="p-4 border rounded transition-colors">
       <h3>Theme Demo</h3>
-      <button onclick="toggleTheme" class="px-4 py-2 bg-gray-200 rounded">Toggle Theme</button>
+      <button $onclick="toggleTheme" class="px-4 py-2 bg-gray-200 rounded">Toggle Theme</button>
     </div>
 
     <!-- Status indicator binding -->
     <div $bind-status-indicator="status" class="p-2 border rounded">
       <p>Current Status: <span $bind-text="status"></span></p>
       <div class="flex space-x-2 mt-2">
-        <button onclick="updateStatus('idle')" class="px-3 py-1 bg-gray-500 text-white rounded">Idle</button>
-        <button onclick="updateStatus('active')" class="px-3 py-1 bg-green-500 text-white rounded">Active</button>
-        <button onclick="updateStatus('loading')" class="px-3 py-1 bg-yellow-500 text-white rounded">Loading</button>
+        <button $onclick="updateStatus" class="px-3 py-1 bg-gray-500 text-white rounded">Idle</button>
+        <button $onclick="updateStatus" class="px-3 py-1 bg-green-500 text-white rounded">Active</button>
+        <button $onclick="updateStatus" class="px-3 py-1 bg-yellow-500 text-white rounded">Loading</button>
       </div>
     </div>
   </div>
@@ -777,14 +777,14 @@ define("rc-counter", function Counter({ $state, $bind, $effect, $compute, $ref }
   <p>Count: <span $state="count">0</span></p>
   <p>Double: <span $bind-text="doubleCount"></span></p>
   <input $ref="countInput" type="number" $bind-value="count" />
-  <button onclick="increment">Increment</button>
-  <button onclick="focusInput">Focus Input</button>
+  <button $onclick="increment">Increment</button>
+  <button $onclick="focusInput">Focus Input</button>
 </rc-counter>
 ```
 
 Notes:
 
-- Event handlers reference `$bind`ed methods by name via `onclick="methodName"`.
+- Event handlers reference `$bind`ed methods by name via `$onclick="methodName"`.
 - Use `$state.someKey` to read/write state. The binding attributes must use alphanumeric keys.
 
 ### Context API
@@ -803,7 +803,7 @@ Inside the definition function you receive a single `context` object:
   - Access: `const el = $ref.refName`
 - `$bind`: Bind functions onto the component instance
   - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
-  - Use in HTML: `onclick="methodName"`
+  - Use in HTML: `$onclick="methodName"`
 - `$customBindingHandlers`: Define custom binding handlers for extending the binding system
   - Assign: `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
   - Use in HTML: `$bind-handler-name="stateKey"`
@@ -869,9 +869,9 @@ define("tab-component", function TabComponent({ $state, $customBindingHandlers, 
 ```html
 <tab-component>
   <div role="tablist">
-    <button role="tab" data-name="tab1" $bind-tab-trigger="activeTab" onclick="selectTab">Tab 1</button>
-    <button role="tab" data-name="tab2" $bind-tab-trigger="activeTab" onclick="selectTab">Tab 2</button>
-    <button role="tab" data-name="tab3" $bind-tab-trigger="activeTab" onclick="selectTab">Tab 3</button>
+    <button role="tab" data-name="tab1" $bind-tab-trigger="activeTab" $onclick="selectTab">Tab 1</button>
+    <button role="tab" data-name="tab2" $bind-tab-trigger="activeTab" $onclick="selectTab">Tab 2</button>
+    <button role="tab" data-name="tab3" $bind-tab-trigger="activeTab" $onclick="selectTab">Tab 3</button>
   </div>
   <div role="tabpanel">
     <p>Active Tab: <span $bind-text="activeTab"></span></p>
@@ -1214,10 +1214,10 @@ export async function handleRequest(req: Request): Promise<Response> {
           <p className="mb-2">
             Count: <span $state="count">0</span>
           </p>
-          <button type="button" onclick="decrement" className="mr-2 bg-blue-500 text-white px-4 py-2 rounded">
+          <button type="button" $onclick="decrement" className="mr-2 bg-blue-500 text-white px-4 py-2 rounded">
             Decrement
           </button>
-          <button type="button" onclick="increment" className="bg-blue-500 text-white px-4 py-2 rounded">
+          <button type="button" $onclick="increment" className="bg-blue-500 text-white px-4 py-2 rounded">
             Increment
           </button>
         </basic-counter>
