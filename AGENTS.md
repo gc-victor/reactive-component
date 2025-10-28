@@ -128,19 +128,20 @@ function setCount(component: ReactiveComponent, value: unknown) {
 
 ### Domain Concepts
 
-| Concept                                 | Definition                                                                                                           |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **Component**                           | A custom element (tag) with encapsulated state and lifecycle                                                         |
-| **State**                               | Single source of truth; updated via setState or direct property setters with reactivity                              |
-| **Computed**                            | Derived state recomputed from dependencies                                                                           |
-| **Binding**                             | Declarative connection between DOM and state (e.g., `$bind-text`)                                                    |
-| **Ref**                                 | Named DOM reference accessible via `this.refs`                                                                       |
-| **Function-based Component (`define`)** | Component registered via `define(name, definition)` using a context object instead of a class                        |
-| **$state**                              | Property-only state API (Proxy) inside `define()`; read/write with `$state.key`; keys must be alphanumeric           |
-| **$bind**                               | Map of methods assigned in `define()` for event attributes (e.g., `$bind.increment = () => {}; $onclick="increment"`) |
-| **$compute**                            | Define a derived state value in `define()`; signature `(key, sources, computation)`                                  |
-| **$effect**                             | Register a side-effect in `define()`; callback may return a cleanup function                                         |
-| **$ref**                                | Retrieve elements registered via `$ref` attributes inside `define()`                                                 |
+| Concept                                 | Definition                                                                                                                                                                                               |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Component**                           | A custom element (tag) with encapsulated state and lifecycle                                                                                                                                             |
+| **State**                               | Single source of truth; updated via setState or direct property setters with reactivity                                                                                                                  |
+| **Computed**                            | Derived state recomputed from dependencies                                                                                                                                                               |
+| **Binding**                             | Declarative connection between DOM and state (e.g., `$bind-text`)                                                                                                                                        |
+| **Ref**                                 | Named DOM reference accessible via `this.refs`                                                                                                                                                           |
+| **Function-based Component (`define`)** | Component registered via `define(name, definition)` using a context object instead of a class                                                                                                            |
+| **$state**                              | Property-only state API (Proxy) inside `define()`; read/write with `$state.key`; keys must be alphanumeric                                                                                               |
+| **$on**                                 | Bind methods for `$on*` event attributes; assign with `$on.methodName = (...args) => { }` and use in HTML via `$onclick="methodName"`; prefer for event handlers to match `$on*` convention              |
+| **$bind**                               | Bind functions onto the component instance; assign with `$bind.methodName = (...args) => { }` and use in HTML via `$bind-class="methodName"`; prefer for binding functions to match `$bind-*` convention |
+| **$compute**                            | Define a derived state value in `define()`; signature `(key, sources, computation)`                                                                                                                      |
+| **$effect**                             | Register a side-effect in `define()`; callback may return a cleanup function                                                                                                                             |
+| **$ref**                                | Retrieve elements registered via `$ref` attributes inside `define()`                                                                                                                                     |
 
 ---
 
@@ -430,22 +431,23 @@ Update these pointers to match real paths as the repository evolves.
 
 ### Glossary
 
-| Term                                    | Definition                                                                                                           |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **ReactiveComponent**                   | Base class providing reactive state, computed properties, and declarative bindings to DOM                            |
-| **Function-based Component (`define`)** | Component registered via `define(name, definition)` using a context object instead of a class                        |
-| **Binding**                             | Attribute-based connection from state to DOM (e.g., `$bind-text="status"`)                                           |
-| **Computed Property**                   | Derived state recomputed from dependencies via `compute()` or `$compute()`                                           |
-| **Ref**                                 | Named handle to a DOM node within the component (`this.refs.name` or `$ref.name`)                                    |
-| **$state**                              | Property-only state API (Proxy) inside `define()`; read/write with `$state.key`; keys must be alphanumeric           |
-| **$bind**                               | Map of methods assigned in `define()` for event attributes (e.g., `$bind.increment = () => {}; $onclick="increment"`) |
-| **$compute**                            | Define a derived state value in `define()`; signature `(key, sources, computation)`                                  |
-| **$effect**                             | Register a side-effect in `define()`; callback may return a cleanup function                                         |
-| **$ref**                                | Property-only API for accessing elements registered via `$ref` attributes inside `define()`                          |
-| **$customBindingHandlers**              | Define custom binding handlers in `define()`; extends the binding system with custom logic                           |
-| **Component Autonomy**                  | Encapsulation of state, lifecycle, and API within a custom element                                                   |
-| **Single Source of Truth**              | Centralized, authoritative state per component                                                                       |
-| **Unidirectional Data Flow**            | State updates propagate downward to bindings; events raise intentions upward                                         |
+| Term                                    | Definition                                                                                                                                                                                               |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ReactiveComponent**                   | Base class providing reactive state, computed properties, and declarative bindings to DOM                                                                                                                |
+| **Function-based Component (`define`)** | Component registered via `define(name, definition)` using a context object instead of a class                                                                                                            |
+| **Binding**                             | Attribute-based connection from state to DOM (e.g., `$bind-text="status"`)                                                                                                                               |
+| **Computed Property**                   | Derived state recomputed from dependencies via `compute()` or `$compute()`                                                                                                                               |
+| **Ref**                                 | Named handle to a DOM node within the component (`this.refs.name` or `$ref.name`)                                                                                                                        |
+| **$state**                              | Property-only state API (Proxy) inside `define()`; read/write with `$state.key`; keys must be alphanumeric                                                                                               |
+| **$on**                                 | Bind methods for `$on*` event attributes; assign with `$on.methodName = (...args) => { }` and use in HTML via `$onclick="methodName"`; prefer for event handlers to match `$on*` convention              |
+| **$bind**                               | Bind functions onto the component instance; assign with `$bind.methodName = (...args) => { }` and use in HTML via `$bind-class="methodName"`; prefer for binding functions to match `$bind-*` convention |
+| **$compute**                            | Define a derived state value in `define()`; signature `(key, sources, computation)`                                                                                                                      |
+| **$effect**                             | Register a side-effect in `define()`; callback may return a cleanup function                                                                                                                             |
+| **$ref**                                | Property-only API for accessing elements registered via `$ref` attributes inside `define()`                                                                                                              |
+| **$customBindingHandlers**              | Define custom binding handlers in `define()`; extends the binding system with custom logic                                                                                                               |
+| **Component Autonomy**                  | Encapsulation of state, lifecycle, and API within a custom element                                                                                                                                       |
+| **Single Source of Truth**              | Centralized, authoritative state per component                                                                                                                                                           |
+| **Unidirectional Data Flow**            | State updates propagate downward to bindings; events raise intentions upward                                                                                                                             |
 
 ---
 
@@ -529,12 +531,19 @@ Inside the definition function, you receive a single context object with:
 - `$effect(callback)`: Register an effect; may return a cleanup function
 - `$ref`: Property-only API for accessing elements registered via `$ref` attributes
   - Access: `const el = $ref.refName`
-- `$bind`: Bind methods onto the component instance for event attributes
-  - Assign with `$bind.methodName = (...args) => { /* this === element */ }`
-  - Use in HTML via `$onclick="methodName"` or other `$on*` attributes
+- `$on`: Bind methods for `$on*` event attributes (alias of `$bind`)
+  - Assign: `$on.methodName = (...args) => { /* this === element */ }`
+  - Use in HTML: `$onclick="methodName"`
+  - Prefer `$on` for event handlers to match the `$on*` convention
+- `$bind`: Bind functions onto the component instance
+  - Assign: `$bind.methodName = (...args) => { /* this === element */ }`
+  - Use in HTML: `$bind-class="methodName"`
+  - Prefer `$bind` for binding functions to match the `$bind-*` convention
 - `$customBindingHandlers`: Define custom binding handlers for extending the binding system
   - Assign with `$customBindingHandlers["handler-name"] = ({ element, rawValue }) => { /* handler logic */ }`
   - Use in HTML via `$bind-handler-name="stateKey"`
+
+**Validation Note:** Method names assigned via `$on`/`$bind` must be alphanumeric (`^[a-zA-Z0-9]+$`). This aligns with `$`-attribute validation rules.
 
 All context methods are safe to call during definition execution.
 
@@ -857,14 +866,11 @@ define("json-state-manager", ({ $state, $compute }) => {
   $state.name = "John Doe";
   $state.age = 30;
   $state.email = "";
-  $compute("json", ["name", "age", "email"], (name, age, email) =>
-    JSON.stringify({ name, age, email }, null, 2),
-  );
+  $compute("json", ["name", "age", "email"], (name, age, email) => JSON.stringify({ name, age, email }, null, 2));
   $compute(
     "isValid",
     ["name", "email"],
-    (name, email) =>
-      (name as string).length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email as string),
+    (name, email) => (name as string).length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email as string),
   );
 });
 ```
@@ -915,6 +921,15 @@ customElements.define("complex-state", ComplexStateComponent);
 3. **Document why** constructor initialization was chosen
 4. **Keep initialization separate** from business logic
 5. **Consider async initialization** for API-dependent state
+
+## Verification Commands
+
+```bash
+pnpm check:fix
+pnpm test
+pnpm test:coverage
+pnpm example:test
+```
 
 ### Performance
 
