@@ -95,9 +95,18 @@ export interface Context {
     $compute: <T extends StateValue[]>(key: string, sources: string[], computation: (...args: T) => StateValue) => void;
 
     /**
-     * Bind methods to the component
+     * Bind methods to the component (identical to $on).
+     * - Usage: $bind.methodName = () => { ... }
+     * - NOTE: Prefer $bind for method handlers to match $bind-* attributes.
      */
     $bind: Bind;
+
+    /**
+     * Bind methods for $on* event attributes (alias of $bind).
+     * - Usage: $on.methodName = () => { ... }
+     * - NOTE: Prefer $on for event handlers to match $on* attributes.
+     */
+    $on: Bind;
 
     /**
      * Custom binding handlers for extending the binding system
@@ -189,6 +198,29 @@ class Define extends ReactiveComponent {
     constructor() {
         super();
 
+        // Create a shared method-binding proxy before constructing the context.
+        const methodBindingProxy: Bind = new Proxy({} as Bind, {
+            set: (_target, prop: string | symbol, value: unknown): boolean => {
+                if (typeof prop !== "string") return true;
+                if (typeof value === "function") {
+                    const boundMethod = (value as (...args: unknown[]) => unknown).bind(this);
+                    Object.defineProperty(this, prop, {
+                        value: boundMethod,
+                        writable: true,
+                        enumerable: true,
+                        configurable: true,
+                    });
+                }
+                return true;
+            },
+            get: (_target, prop: string | symbol): unknown => {
+                if (typeof prop === "string") {
+                    return (this as Record<string, unknown>)[prop];
+                }
+                return undefined;
+            },
+        });
+
         // Create context object
         const context: Context = {
             $element: this as unknown as Element,
@@ -233,38 +265,21 @@ class Define extends ReactiveComponent {
                 },
             }),
 
-            // Unified effect method - always use context version
+            // Effect registration wrapper - forwards to instance method
             $effect: (callback: () => void): (() => void) => {
                 return this.effect(callback);
             },
 
-            // Unified compute method - always use context version
+            // Compute registration wrapper - forwards to instance method
             $compute: <T extends StateValue[]>(key: string, sources: string[], computation: (...args: T) => StateValue): void => {
                 this.compute(key, sources, computation);
             },
 
-            // Method binding proxy
-            $bind: new Proxy({} as Bind, {
-                set: (_target, prop: string | symbol, value: unknown): boolean => {
-                    if (typeof prop === "string" && typeof value === "function") {
-                        // Bind regular methods to the component
-                        const boundMethod = value.bind(this);
-                        Object.defineProperty(this, prop, {
-                            value: boundMethod,
-                            writable: true,
-                            enumerable: true,
-                            configurable: true,
-                        });
-                    }
-                    return true;
-                },
-                get: (_target, prop: string | symbol): unknown => {
-                    if (typeof prop === "string") {
-                        return (this as Record<string, unknown>)[prop];
-                    }
-                    return undefined;
-                },
-            }),
+            // Method binding proxy (shared by $bind and $on)
+            $bind: methodBindingProxy,
+
+            // Alias of $bind using the same proxy instance
+            $on: methodBindingProxy,
 
             // Custom binding handlers
             $customBindingHandlers: new Proxy({} as CustomBindingHandlers, {
@@ -339,12 +354,12 @@ class Define extends ReactiveComponent {
  *
  * @example
  * ```typescript
- * define("rc-counter", function Counter({ $state, $bind, $effect, $compute, $ref }) {
+ * define("rc-counter", function Counter({ $state, $on, $effect, $compute, $ref }) {
  *     // Initialize state
  *     $state.count = 0;
  *
- *     // Bind methods for event handlers
- *     $bind.increment = () => {
+ *     // Bind methods for $on* event handlers (alias of $bind)
+ *     $on.increment = () => {
  *         $state.count = ($state.count as number) + 1;
  *     };
  *
@@ -357,7 +372,7 @@ class Define extends ReactiveComponent {
  *     });
  *
  *     // Access element references
- *     $bind.focusInput = () => {
+ *     $on.focusInput = () => {
  *         const input = $ref.countInput;
  *         input?.focus();
  *     };
