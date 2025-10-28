@@ -5,7 +5,10 @@ export default {
         ".svg": "text",
         ".ttf": "file",
         ".woff": "file",
-        ".woff2": "file"
+        ".woff2": "file",
     },
     publicPath: "./",
-}
+    alias: {
+        "@dist": "../../dist",
+    },
+};
