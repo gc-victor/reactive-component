@@ -1,7 +1,7 @@
 import { define } from "@dist/index.js";
 
 // Custom Progress Binding with Progress Bar
-define("custom-progress-binding", ({ $state, $bind, $compute, $ref, $customBindingHandlers }) => {
+define("custom-progress-binding", ({ $state, $on, $compute, $ref, $customBindingHandlers }) => {
     let progressInterval: number | null = null;
 
     // Initialize state
@@ -32,7 +32,7 @@ define("custom-progress-binding", ({ $state, $bind, $compute, $ref, $customBindi
     };
 
     // Method to simulate progress
-    $bind.startProgress = () => {
+    $on.startProgress = () => {
         let value = $state.progressValue && $state.progressValue !== 100 ? ($state.progressValue as number) : 0;
         // Clear any existing interval
         if (progressInterval) {
@@ -57,7 +57,7 @@ define("custom-progress-binding", ({ $state, $bind, $compute, $ref, $customBindi
     };
 
     // Method to stop progress simulation
-    $bind.stopProgress = () => {
+    $on.stopProgress = () => {
         if (progressInterval) {
             window.clearInterval(progressInterval);
             progressInterval = null;

@@ -1,12 +1,12 @@
 import { define } from "@dist/index.js";
 
 // Password Toggle Component
-define("password-toggle", ({ $state, $bind, $customBindingHandlers }) => {
+define("password-toggle", ({ $state, $on, $customBindingHandlers }) => {
     // Initialize state
     $state.isPasswordVisible = false;
 
     // Bind toggle method
-    $bind.toggleVisibility = () => {
+    $on.toggleVisibility = () => {
         $state.isPasswordVisible = !$state.isPasswordVisible;
     };
 

@@ -1,16 +1,16 @@
 import { define } from "@dist/index.js";
 
 // Basic Counter Component
-define("basic-counter", ({ $state, $bind, $effect }) => {
+define("basic-counter", ({ $state, $on, $effect }) => {
     // Initialize state
     $state.count = 0;
 
     // Bind methods
-    $bind.increment = () => {
+    $on.increment = () => {
         $state.count++;
     };
 
-    $bind.decrement = () => {
+    $on.decrement = () => {
         $state.count--;
     };
 

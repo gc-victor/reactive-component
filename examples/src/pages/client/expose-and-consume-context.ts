@@ -23,7 +23,7 @@ const DARK_THEME: Theme = {
 const context = createContext("theme");
 
 // Theme Provider Component
-define("theme-provider", ({ $state, $bind, $element }) => {
+define("theme-provider", ({ $state, $on, $element }) => {
     // Initialize state
     $state.theme = LIGHT_THEME;
 
@@ -31,7 +31,7 @@ define("theme-provider", ({ $state, $bind, $element }) => {
     $element.exposeContext(context);
 
     // Toggle theme method
-    $bind.toggleTheme = () => {
+    $on.toggleTheme = () => {
         const currentTheme = $element.getState("theme") as Theme;
         $state.theme = currentTheme.mode === LIGHT_THEME.mode ? DARK_THEME : LIGHT_THEME;
     };
