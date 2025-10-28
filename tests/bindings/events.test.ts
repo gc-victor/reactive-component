@@ -111,15 +111,15 @@ describe("ReactiveComponent Event Bindings", () => {
             }
             customElements.define("test-click-event", ClickEventComponent);
 
-            it("should register click handlers from onClick attributes", () => {
+            it("should register click handlers from $onClick attributes", () => {
                 const { component, cleanup } = createComponent<ClickEventComponent>(
                     "test-click-event",
                     {},
-                    '<button onClick="handleClick">Click Me</button>',
+                    '<button $onClick="handleClick">Click Me</button>',
                 );
 
                 const button = component.querySelector("button") as HTMLButtonElement;
-                expect(button.hasAttribute("onClick")).toBe(false);
+                expect(button.hasAttribute("$onClick")).toBe(false);
 
                 button.click();
 
@@ -146,17 +146,17 @@ describe("ReactiveComponent Event Bindings", () => {
                     "test-multi-event",
                     {},
                     `<div
-                      onClick="recordEvent"
-                      onMouseenter="recordEvent"
-                      onMouseleave="recordEvent">
+                      $onClick="recordEvent"
+                      $onMouseenter="recordEvent"
+                      $onMouseleave="recordEvent">
                       Test Element
                     </div>`,
                 );
 
                 const div = component.querySelector("div") as HTMLDivElement;
-                expect(div.hasAttribute("onClick")).toBe(false);
-                expect(div.hasAttribute("onMouseenter")).toBe(false);
-                expect(div.hasAttribute("onMouseleave")).toBe(false);
+                expect(div.hasAttribute("$onClick")).toBe(false);
+                expect(div.hasAttribute("$onMouseenter")).toBe(false);
+                expect(div.hasAttribute("$onMouseleave")).toBe(false);
 
                 div.dispatchEvent(new MouseEvent("click", { bubbles: true }));
                 div.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
@@ -178,7 +178,7 @@ describe("ReactiveComponent Event Bindings", () => {
                 const { component, cleanup } = createComponent<MissingHandlerComponent>(
                     "test-missing-handler",
                     {},
-                    '<button onClick="nonExistentHandler">Click</button>',
+                    '<button $onClick="nonExistentHandler">Click</button>',
                 );
 
                 const button = component.querySelector("button") as HTMLButtonElement;
@@ -201,7 +201,7 @@ describe("ReactiveComponent Event Bindings", () => {
                 const { component, cleanup } = createComponent<NonFunctionHandlerComponent>(
                     "test-non-function",
                     {},
-                    '<button onClick="notAFunction">Click</button>',
+                    '<button $onClick="notAFunction">Click</button>',
                 );
 
                 const button = component.querySelector("button") as HTMLButtonElement;
@@ -222,13 +222,13 @@ describe("ReactiveComponent Event Bindings", () => {
                 const { cleanup: cleanup1 } = createComponent<InvalidEventBindingComponent>(
                     "invalid-event-binding-component",
                     {},
-                    '<button onClick="">Click Me</button>',
+                    '<button $onClick="">Click Me</button>',
                 );
 
                 const { cleanup: cleanup2 } = createComponent<InvalidEventBindingComponent>(
                     "invalid-event-binding-component",
                     {},
-                    '<button on="handleClick">Click Me</button>',
+                    '<button $on="handleClick">Click Me</button>',
                 );
 
                 expect(errors.some((e) => e.includes("Event binding requires event name and handler"))).toBe(true);
