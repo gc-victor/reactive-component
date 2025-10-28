@@ -5,7 +5,7 @@ const CONTEXT_ID_PREFIX = "reactive-component-context-";
 const REF_ATTRIBUTE = "$ref";
 const STATE_ATTRIBUTE = "$state";
 const BIND_ATTRIBUTE_PREFIX = "$bind-";
-const EVENT_ATTRIBUTE_PREFIX = "on";
+const EVENT_ATTRIBUTE_PREFIX = "$on";
 
 // Binding Types
 const BINDING_TYPE_VALUE = "value";
@@ -595,7 +595,7 @@ export class ReactiveComponent extends HTMLElement {
      * <div $bind-class="isActive"></div> // ClassList binding ({ add: 'active', remove: 'inactive' })
      *
      * // Event handling
-     * <button onclick="handleClick">Click Me</button>
+     * <button $onclick="handleClick">Click Me</button>
      * // Define in component: handleClick() { console.log('clicked'); }
      * ```
      * @private
@@ -654,10 +654,10 @@ export class ReactiveComponent extends HTMLElement {
             } else if (name.startsWith(EVENT_ATTRIBUTE_PREFIX)) {
                 // EVENT ATTRIBUTES: Binds DOM events to component methods
                 // Examples:
-                // - onclick="handleClick" - binds click event to this.handleClick method
-                // - oninput="updateText" - binds input event to this.updateText method
-                // - onsubmit="submitForm" - binds submit event to this.submitForm method
-                // - onmouseover="showTooltip" - binds mouseover event to this.showTooltip method
+                // - $onclick="handleClick" - binds click event to this.handleClick method
+                // - $oninput="updateText" - binds input event to this.updateText method
+                // - $onsubmit="submitForm" - binds submit event to this.submitForm method
+                // - $onmouseover="showTooltip" - binds mouseover event to this.showTooltip method
                 // Note: Method must exist on the component class and be accessible
                 const eventName = name.slice(EVENT_ATTRIBUTE_PREFIX.length);
                 if (!eventName || !value) {
