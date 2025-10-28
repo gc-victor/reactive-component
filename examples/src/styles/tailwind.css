@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
@@ -9,13 +9,13 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
 }
 
 /* Firefox */
@@ -54,7 +54,8 @@ body {
     font-style: normal;
     font-display: swap;
     font-weight: 800;
-    src: url("../assets/webfonts/CalSans-SemiBold.woff2") format("woff2"),
+    src:
+        url("../assets/webfonts/CalSans-SemiBold.woff2") format("woff2"),
         url("../assets/webfonts/CalSans-SemiBold.woff") format("woff"),
         url("../assets/webfonts/CalSans-SemiBold.ttf") format("truetype");
 }
