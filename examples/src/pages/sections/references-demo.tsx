@@ -18,7 +18,7 @@ export default function ReferencesDemo() {
                                 placeholder="Username"
                                 className="border border-slate-300 p-2 w-full"
                             />
-                            <button type="button" onclick="focusUsername" className="bg-blue-500 text-white px-4 py-2 rounded">
+                            <button type="button" $onclick="focusUsername" className="bg-blue-500 text-white px-4 py-2 rounded">
                                 Focus Username Input
                             </button>
                         </div>
@@ -29,7 +29,7 @@ export default function ReferencesDemo() {
                                 <p>This box can be measured!</p>
                                 <p className="text-xs text-slate-600">Resize the window to see updates</p>
                             </div>
-                            <button type="button" onclick="measureElement" className="bg-green-500 text-white px-4 py-2 rounded">
+                            <button type="button" $onclick="measureElement" className="bg-green-500 text-white px-4 py-2 rounded">
                                 Measure Box
                             </button>
                             <p className="text-sm">

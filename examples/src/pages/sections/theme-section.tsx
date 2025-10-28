@@ -6,7 +6,7 @@ export default function ThemeSection() {
                 <theme-provider className="p-4 border border-slate-300 rounded block">
                     <button
                         type="button"
-                        onclick="toggleTheme"
+                        $onclick="toggleTheme"
                         className="mb-4 bg-slate-500 text-white px-4 py-2 rounded hover:bg-slate-600"
                     >
                         Toggle Theme

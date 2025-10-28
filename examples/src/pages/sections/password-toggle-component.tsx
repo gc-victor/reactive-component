@@ -17,7 +17,7 @@ export default function PasswordToggleComponent() {
                         <button
                             type="button"
                             className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
-                            onclick="toggleVisibility"
+                            $onclick="toggleVisibility"
                             aria-label="Toggle password visibility"
                         >
                             <span data-icon="show" style="display: block;" $bind-icon-visibility="isPasswordVisible">
