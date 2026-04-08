@@ -104,6 +104,34 @@ describe("ReactiveComponent Form Input Bindings", () => {
         cleanup();
     });
 
+    it("should handle radio button with falsy value", () => {
+        class RadioFalsyComponent extends TestReactiveComponent {
+            radioValue!: string;
+            constructor() {
+                super();
+                this.testSetState("radioValue", "option1");
+            }
+        }
+        customElements.define("test-radio-falsy", RadioFalsyComponent);
+
+        const { component, cleanup } = createComponent<RadioFalsyComponent>(
+            "test-radio-falsy",
+            {},
+            `
+        <input type="radio" name="group1" value="option1" $bind-value="radioValue" />
+        <input type="radio" name="group1" value="option2" $bind-value="radioValue" />
+      `,
+        );
+        const radioButtons = component.querySelectorAll('input[type="radio"]') as NodeListOf<HTMLInputElement>;
+        // Initially option1 is selected
+        expect(radioButtons[0].checked).toBe(true);
+        // Set to empty string (falsy value) - should not update radio buttons
+        component.testSetState("radioValue", "");
+        // Radio buttons should remain in their previous state since formattedValue is falsy
+        expect(radioButtons[0].checked).toBe(true);
+        cleanup();
+    });
+
     it("should warn about incorrect binding types for checkbox and radio inputs", () => {
         class CheckboxRadioComponent extends TestReactiveComponent {
             checkboxValue!: string;
@@ -160,12 +188,16 @@ describe("ReactiveComponent Form Input Bindings", () => {
         const inputs = component.querySelectorAll("input") as NodeListOf<HTMLInputElement>;
         const numberInput = inputs[0];
         const rangeInput = inputs[1];
+        // State-to-DOM: setting valueAsNumber updates component state
         numberInput.valueAsNumber = 42;
         numberInput.dispatchEvent(new Event("input"));
         expect(component.numberValue).toBe(42);
         rangeInput.valueAsNumber = 75;
         rangeInput.dispatchEvent(new Event("input"));
         expect(component.numberValue).toBe(75);
+        // DOM-to-state: simulateInput updates component state for number inputs
+        simulateInput(numberInput, "100");
+        expect(component.numberValue).toBe(100);
         numberInput.valueAsNumber = Number.NaN;
         numberInput.dispatchEvent(new Event("input"));
         expect(component.numberValue).toBe(Number.NaN);
@@ -233,7 +265,7 @@ describe("ReactiveComponent Form Input Bindings", () => {
         cleanup();
     });
 
-    it("should handle textarea with various events", () => {
+    it("should bind textarea input and change events", () => {
         class InputHandlingComponent extends TestReactiveComponent {
             textAreaValue!: string;
             constructor() {
@@ -241,25 +273,163 @@ describe("ReactiveComponent Form Input Bindings", () => {
                 this.testSetState("textAreaValue", "");
             }
         }
-        customElements.define("test-textarea-handling", InputHandlingComponent);
+        customElements.define("test-textarea-handling-v2", InputHandlingComponent);
 
         const { component, cleanup } = createComponent<InputHandlingComponent>(
-            "test-textarea-handling",
+            "test-textarea-handling-v2",
             {},
             '<textarea $bind-value="textAreaValue"></textarea>',
         );
         const textarea = component.querySelector("textarea") as HTMLTextAreaElement;
+        // Verify textarea is properly bound
+        expect(textarea).toBeTruthy();
+        expect(textarea instanceof HTMLTextAreaElement).toBe(true);
+        // Trigger input event to test textarea-specific handling
         textarea.value = "Hello, world!";
-        textarea.dispatchEvent(new Event("input"));
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
         expect(component.textAreaValue).toBe("Hello, world!");
         textarea.value = "Changed text";
-        textarea.dispatchEvent(new Event("input"));
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
         expect(component.textAreaValue).toBe("Changed text");
-        const multilineText = "Line 1\\nLine 2\\nLine 3";
+        // Use actual newline characters for multiline textarea binding
+        const multilineText = "Line 1\nLine 2\nLine 3";
         textarea.value = multilineText;
-        textarea.dispatchEvent(new Event("input"));
-        textarea.dispatchEvent(new Event("change"));
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        textarea.dispatchEvent(new Event("change", { bubbles: true }));
         expect(component.textAreaValue).toBe(multilineText);
+        cleanup();
+    });
+
+    it("should handle radio button value binding when unchecked", () => {
+        class RadioUncheckedComponent extends TestReactiveComponent {
+            radioValue!: string;
+            constructor() {
+                super();
+                this.testSetState("radioValue", "option1");
+            }
+        }
+        customElements.define("test-radio-unchecked", RadioUncheckedComponent);
+
+        const { component, cleanup } = createComponent<RadioUncheckedComponent>(
+            "test-radio-unchecked",
+            {},
+            `
+        <input type="radio" name="group1" value="option1" $bind-value="radioValue" />
+        <input type="radio" name="group1" value="option2" $bind-value="radioValue" />
+      `,
+        );
+        const radioButtons = component.querySelectorAll('input[type="radio"]') as NodeListOf<HTMLInputElement>;
+        // First radio is checked initially
+        expect(radioButtons[0].checked).toBe(true);
+        expect(radioButtons[1].checked).toBe(false);
+        // Trigger input event on unchecked radio - should not update state
+        radioButtons[1].dispatchEvent(new Event("input", { bubbles: true }));
+        // State should remain option1 since radio[1] is not checked
+        expect(component.radioValue).toBe("option1");
+        cleanup();
+    });
+
+    it("should handle radio group with non-input elements in query results", () => {
+        class RadioGroupWithExtraComponent extends TestReactiveComponent {
+            radioValue!: string;
+            constructor() {
+                super();
+                this.testSetState("radioValue", "option1");
+            }
+        }
+        customElements.define("test-radio-group-extra", RadioGroupWithExtraComponent);
+
+        const { component, cleanup } = createComponent<RadioGroupWithExtraComponent>(
+            "test-radio-group-extra",
+            {},
+            `
+        <div>
+          <input type="radio" name="testgroup" value="option1" $bind-value="radioValue" />
+          <input type="radio" name="testgroup" value="option2" $bind-value="radioValue" />
+        </div>
+      `,
+        );
+        // Override querySelectorAll to return mixed node types for branch coverage
+        const originalQuerySelectorAll = component.querySelectorAll.bind(component);
+        component.querySelectorAll = (selector: string): NodeListOf<Element> => {
+            const result = originalQuerySelectorAll(selector);
+            if (selector.includes('input[type="radio"]')) {
+                // Create a mock NodeList with a non-HTMLInputElement element
+                const container = document.createElement("div");
+                const fakeElement = document.createElement("div");
+                fakeElement.setAttribute("name", "testgroup");
+                container.appendChild(fakeElement);
+                // Return combined results
+                const mixed = Array.from(result).concat([fakeElement]);
+                return mixed as unknown as NodeListOf<Element>;
+            }
+            return result;
+        };
+        // Trigger state update to exercise radio group handling
+        component.testSetState("radioValue", "option2");
+        const radioButtons = component.querySelectorAll('input[type="radio"]') as NodeListOf<HTMLInputElement>;
+        expect(radioButtons[1].checked).toBe(true);
+        cleanup();
+    });
+
+    it.each([
+        {
+            name: "checked",
+            tagName: "test-checked-binding",
+            stateKey: "isChecked",
+            initialValue: true,
+            nextValue: false,
+            markup: '<div $bind-checked="isChecked">Not an input</div>',
+        },
+        {
+            name: "disabled",
+            tagName: "test-disabled-binding-div",
+            stateKey: "isDisabled",
+            initialValue: true,
+            nextValue: false,
+            markup: '<div $bind-disabled="isDisabled">Not an input</div>',
+        },
+    ])("should not throw when binding $name on a div", ({ tagName, stateKey, initialValue, nextValue, markup }) => {
+        class NonInputBindingComponent extends TestReactiveComponent {
+            [key: string]: unknown;
+
+            constructor() {
+                super();
+                this.testSetState(stateKey, initialValue);
+            }
+        }
+        customElements.define(tagName, NonInputBindingComponent);
+
+        const { component, cleanup } = createComponent<NonInputBindingComponent>(tagName, {}, markup);
+        const div = component.querySelector("div") as HTMLDivElement;
+
+        expect(div).toBeTruthy();
+        component.testSetState(stateKey, nextValue);
+        expect(div).toBeTruthy();
+
+        cleanup();
+    });
+
+    it("should handle value binding on element without value property", () => {
+        class ValueBindingComponent extends TestReactiveComponent {
+            textValue!: string;
+            constructor() {
+                super();
+                this.testSetState("textValue", "test");
+            }
+        }
+        customElements.define("test-value-binding-div", ValueBindingComponent);
+
+        const { component, cleanup } = createComponent<ValueBindingComponent>(
+            "test-value-binding-div",
+            {},
+            '<div $bind-value="textValue">No value property</div>',
+        );
+        const div = component.querySelector("div") as HTMLDivElement;
+        // Div doesn't have value property, binding should not throw
+        expect(div).toBeTruthy();
+        component.textValue = "updated";
+        expect(div.textContent).toBe("No value property");
         cleanup();
     });
 });
