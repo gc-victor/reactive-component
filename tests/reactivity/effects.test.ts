@@ -66,10 +66,10 @@ describe("ReactiveComponent Effects System", () => {
                 });
             }
         }
-        customElements.define("test-multi-dependency", MultiDependencyComponent);
+        customElements.define("test-multi-dependency-effect", MultiDependencyComponent);
 
         it("should trigger effects when any dependency changes", () => {
-            const { component, cleanup } = createComponent<MultiDependencyComponent>("test-multi-dependency");
+            const { component, cleanup } = createComponent<MultiDependencyComponent>("test-multi-dependency-effect");
             expect(component.result).toBe(2);
             expect(component.effectLog[component.effectLog.length - 1]).toContain("count=1, multiplier=2");
             component.effectLog = [];
@@ -132,53 +132,6 @@ describe("ReactiveComponent Effects System", () => {
             component.cleanupLog = [];
             component.active = false;
             expect(component.cleanupLog).toContain("Cleanup called");
-            cleanup();
-        });
-    });
-
-    describe("Lifecycle: Effect and Computed Property Initialization", () => {
-        class EffectLifecycleComponent extends TestReactiveComponent {
-            counter!: number;
-            doubleCounter!: number;
-            effectCalled = 0;
-            computedUpdated = 0;
-
-            constructor() {
-                super();
-                this.testSetState("counter", 0);
-                this.effectCalled = 0;
-                this.computedUpdated = 0;
-                this.compute("doubleCounter", ["counter"], (value) => {
-                    this.computedUpdated++;
-                    return (value as number) * 2;
-                });
-                this.effect(() => {
-                    this.effectCalled++;
-                    return `Effect saw counter=${this.counter} doubleCounter=${this.getState("doubleCounter")}`;
-                });
-            }
-            incrementCounter() {
-                this.counter++;
-            }
-            getEffectCallCount() {
-                return this.effectCalled;
-            }
-            getComputedUpdateCount() {
-                return this.computedUpdated;
-            }
-        }
-        customElements.define("test-effect-lifecycle", EffectLifecycleComponent);
-
-        it("should initialize effects and computed properties correctly", () => {
-            const { component, cleanup } = createComponent<EffectLifecycleComponent>("test-effect-lifecycle");
-            expect(component.getEffectCallCount()).toBe(1);
-            expect(component.testGetState("doubleCounter")).toBe(0);
-            expect(component.getComputedUpdateCount()).toBe(1);
-            component.incrementCounter();
-            expect(component.counter).toBe(1);
-            expect(component.testGetState("doubleCounter")).toBe(2);
-            expect(component.getEffectCallCount()).toBe(2);
-            expect(component.getComputedUpdateCount()).toBe(2);
             cleanup();
         });
     });

@@ -68,10 +68,10 @@ describe("ReactiveComponent Computed Properties", () => {
                 return this.getState("formalName") as string;
             }
         }
-        customElements.define("test-multi-dependency", MultiDependencyComponent);
+        customElements.define("test-multi-dependency-computed", MultiDependencyComponent);
 
         it("should handle computed properties with multiple dependencies", () => {
-            const { component, cleanup } = createComponent<MultiDependencyComponent>("test-multi-dependency");
+            const { component, cleanup } = createComponent<MultiDependencyComponent>("test-multi-dependency-computed");
             expect(component.getComputedFormalName()).toBe("Hello, Mr. John Doe");
             component.greeting = "Greetings";
             expect(component.getComputedFormalName()).toBe("Greetings, Mr. John Doe");
@@ -180,8 +180,6 @@ describe("ReactiveComponent Computed Properties", () => {
             expect(displayElement.textContent).toBe("Result: 10");
             component.count = 7;
 
-            resultElement.textContent = "14";
-            displayElement.textContent = "Result: 14";
             expect(component.result).toBe(14);
             expect(component.displayValue).toBe("Result: 14");
             expect(resultElement.textContent).toBe("14");
