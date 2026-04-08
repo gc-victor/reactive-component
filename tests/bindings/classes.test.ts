@@ -129,6 +129,31 @@ describe("ReactiveComponent Class and Style Bindings", () => {
             cleanup();
         });
 
+        it("should handle replace operation with invalid array in $bind-class", () => {
+            class BindClassReplaceInvalidComponent extends TestReactiveComponent {
+                classOps!: object;
+                constructor() {
+                    super();
+                    this.testSetState("classOps", { replace: "not-an-array" });
+                }
+            }
+            customElements.define("bind-class-replace-invalid-component", BindClassReplaceInvalidComponent);
+            const { component, cleanup } = createComponent<BindClassReplaceInvalidComponent>(
+                "bind-class-replace-invalid-component",
+                {},
+                '<div class="initial old-class" $bind-class="classOps">Content</div>',
+            );
+            const div = component.querySelector("div") as HTMLDivElement;
+            // With non-array replace value, no replacement should occur
+            expect(div.classList.contains("initial")).toBe(true);
+            expect(div.classList.contains("old-class")).toBe(true);
+            // Test with array of wrong length (not 2)
+            component.classOps = { replace: ["only-one-element"] };
+            expect(div.classList.contains("initial")).toBe(true);
+            expect(div.classList.contains("old-class")).toBe(true);
+            cleanup();
+        });
+
         it("should handle toggle operation with object value in $bind-class", () => {
             class BindClassToggleObjectComponent extends TestReactiveComponent {
                 classOps!: object;
@@ -149,6 +174,29 @@ describe("ReactiveComponent Class and Style Bindings", () => {
             expect(div.classList.contains("conditional-class")).toBe(false);
             component.classOps = { toggle: { key: "conditional-class", value: true } };
             expect(div.classList.contains("conditional-class")).toBe(true);
+            cleanup();
+        });
+
+        it("should handle toggle operation with invalid value type in $bind-class", () => {
+            class BindClassToggleInvalidComponent extends TestReactiveComponent {
+                classOps!: object;
+                constructor() {
+                    super();
+                    this.testSetState("classOps", { toggle: 123 });
+                }
+            }
+            customElements.define("bind-class-toggle-invalid-component", BindClassToggleInvalidComponent);
+            const { component, cleanup } = createComponent<BindClassToggleInvalidComponent>(
+                "bind-class-toggle-invalid-component",
+                {},
+                '<div class="initial" $bind-class="classOps">Content</div>',
+            );
+            const div = component.querySelector("div") as HTMLDivElement;
+            // With invalid toggle value (neither string nor object), no toggle should occur
+            expect(div.classList.contains("initial")).toBe(true);
+            // Test with boolean value
+            component.classOps = { toggle: true };
+            expect(div.classList.contains("initial")).toBe(true);
             cleanup();
         });
 

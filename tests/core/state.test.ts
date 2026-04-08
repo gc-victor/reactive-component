@@ -215,4 +215,54 @@ describe("ReactiveComponent State Management (Core)", () => {
             expect(component.items).toEqual(["apple", "banana", "cherry"]);
         });
     });
+
+    describe("State Binding Edge Cases", () => {
+        it("should handle state binding on element without $state declaration", () => {
+            class StateBindingEdgeCaseComponent extends TestReactiveComponent {
+                externalState!: string;
+                constructor() {
+                    super();
+                    this.testSetState("externalState", "initial");
+                }
+            }
+            customElements.define("state-binding-edge-case-component", StateBindingEdgeCaseComponent);
+
+            const { component, cleanup } = createComponent<StateBindingEdgeCaseComponent>(
+                "state-binding-edge-case-component",
+                {},
+                '<span $state="declaredState">Declared</span><span $bind-text="externalState">External</span>',
+            );
+            const externalSpan = component.querySelectorAll("span")[1] as HTMLSpanElement;
+            // The externalState binding should still work even though it wasn't declared via $state
+            expect(externalSpan.textContent).toBe("initial");
+            component.externalState = "updated";
+            expect(externalSpan.textContent).toBe("updated");
+            cleanup();
+        });
+
+        it("should handle state binding when stateElements does not have the key", () => {
+            class StateElementsMissingComponent extends TestReactiveComponent {
+                orphanState!: string;
+                constructor() {
+                    super();
+                    this.testSetState("orphanState", "initial");
+                }
+            }
+            customElements.define("state-elements-missing-component", StateElementsMissingComponent);
+
+            const { component, cleanup } = createComponent<StateElementsMissingComponent>(
+                "state-elements-missing-component",
+                {},
+                '<span $state="existingState">Existing</span><span $bind-state="orphanState">Orphan</span>',
+            );
+            // orphanState is bound via $bind-state but not declared via $state on any element
+            // The BINDING_TYPE_STATE handler should not update textContent when stateKey is not in stateElements
+            const orphanSpan = component.querySelectorAll("span")[1] as HTMLSpanElement;
+            expect(orphanSpan.textContent).toBe("Orphan");
+            // Update state - since orphanState is not in stateElements, textContent should not change
+            component.orphanState = "updated";
+            expect(orphanSpan.textContent).toBe("Orphan");
+            cleanup();
+        });
+    });
 });

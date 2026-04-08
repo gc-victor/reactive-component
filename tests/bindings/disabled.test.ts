@@ -12,38 +12,27 @@ describe("ReactiveComponent Disabled Binding", () => {
     }
     customElements.define("test-disabled-binding", DisabledBindingComponent);
 
-    it("should bind disabled property to state", () => {
-        const { component, cleanup } = createComponent<DisabledBindingComponent>(
-            "test-disabled-binding",
-            {},
-            '<button $bind-disabled="isDisabled">Button</button>',
-        );
+    it.each([
+        {
+            name: "button",
+            markup: '<button $bind-disabled="isDisabled">Button</button>',
+            selector: "button",
+        },
+        {
+            name: "text input",
+            markup: '<input $bind-disabled="isDisabled" type="text" />',
+            selector: "input",
+        },
+    ])("should bind disabled property for $name elements", ({ markup, selector }) => {
+        const { component, cleanup } = createComponent<DisabledBindingComponent>("test-disabled-binding", {}, markup);
 
-        const button = component.querySelector("button") as HTMLButtonElement;
-        expect(button.disabled).toBe(false);
-
-        component.isDisabled = true;
-
-        expect(button.disabled).toBe(true);
-        expect(button.hasAttribute("disabled")).toBe(true);
-
-        cleanup();
-    });
-
-    it("should handle disabled binding on input elements", () => {
-        const { component, cleanup } = createComponent<DisabledBindingComponent>(
-            "test-disabled-binding",
-            {},
-            '<input $bind-disabled="isDisabled" type="text" />',
-        );
-
-        const input = component.querySelector("input") as HTMLInputElement;
-        expect(input.disabled).toBe(false);
+        const element = component.querySelector(selector) as HTMLButtonElement | HTMLInputElement;
+        expect(element.disabled).toBe(false);
 
         component.isDisabled = true;
 
-        expect(input.disabled).toBe(true);
-        expect(input.hasAttribute("disabled")).toBe(true);
+        expect(element.disabled).toBe(true);
+        expect(element.hasAttribute("disabled")).toBe(true);
 
         cleanup();
     });
