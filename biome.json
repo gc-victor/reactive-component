@@ -11,7 +11,8 @@
         }
     },
     "files": {
-        "includes": ["**", "!types", "!dist"]
+        "includes": ["**", "!types", "!dist"],
+        "experimentalScannerIgnores": ["**/global.css"]
     },
     "formatter": {
         "enabled": true,
