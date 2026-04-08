@@ -11,10 +11,6 @@ import SelectFieldDemo from "./sections/select-field-demo";
 import ThemeSection from "./sections/theme-section";
 import TwoWayDataBinding from "./sections/two-way-data-binding";
 
-export const head = {
-    title: "Reactive Component Examples",
-};
-
 export default () => (
     <Page>
         <BasicStateAndEvents />
