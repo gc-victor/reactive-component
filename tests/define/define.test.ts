@@ -229,7 +229,7 @@ describe("Define", () => {
                 // Directly read via the proxy get-trap after setting null; should yield undefined
                 nullCoerced = ($state as Record<string, unknown>).nullish;
 
-                // and $state.has with non-string key path returning false (define.ts L150)
+                // Proxy with symbol key - non-string key path returns false
                 const sym = Symbol("s");
                 symbolGet = Reflect.get($state as object, sym);
                 symbolHas = Reflect.has($state as object, sym);
@@ -254,14 +254,14 @@ describe("Define", () => {
             expect(el).toBeTruthy();
 
             // Assertions for edge branches
-            expect(nullCoerced).toBeUndefined(); // null coerces to undefined via $state.get
-            expect(symbolGet).toBeUndefined(); // non-string key get -> undefined
-            expect(symbolHas).toBe(false); // non-string key has -> false
+            expect(nullCoerced).toBeUndefined();
+            expect(symbolGet).toBeUndefined();
+            expect(symbolHas).toBe(false);
 
-            expect(bindExistingIsFunction).toBe(true); // $bind.get for existing returns bound function
-            expect(bindExistingCallResult).toBe("ok"); // function is callable and returns expected result
-            expect(bindNonExistingIsUndefined).toBe(true); // $bind.get for non-existing returns undefined
-            expect(bindSymbolGet).toBeUndefined(); // non-string key get -> undefined for $bind.get
+            expect(bindExistingIsFunction).toBe(true);
+            expect(bindExistingCallResult).toBe("ok");
+            expect(bindNonExistingIsUndefined).toBe(true);
+            expect(bindSymbolGet).toBeUndefined();
         });
     });
 
@@ -813,6 +813,160 @@ describe("Define", () => {
 
             // String key (existing handler) should return the handler function
             expect(typeof handlerStringGet).toBe("function");
+        });
+    });
+
+    describe("Proxy Uncovered Branches", () => {
+        it("should skip custom handler when rawValue is undefined", () => {
+            let handlerCallCount = 0;
+            const callValues: unknown[] = [];
+
+            define("undefined-rawvalue-test", function UndefinedRawValueTest({ $state, $compute, $customBindingHandlers }: Context) {
+                // State controls whether computed returns undefined or a value
+                $state.enabled = true;
+
+                // Computed returns "active" when enabled, undefined when disabled
+                $compute("maybeValue", ["enabled"], (enabled) => {
+                    return enabled ? "active" : undefined;
+                });
+
+                $customBindingHandlers["undefined-check"] = ({ element, rawValue }) => {
+                    handlerCallCount++;
+                    callValues.push(rawValue);
+                    if (element instanceof HTMLElement) {
+                        element.dataset.calls = String(handlerCallCount);
+                    }
+                };
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <undefined-rawvalue-test>
+                    <div $bind-undefined-check="maybeValue">Test</div>
+                </undefined-rawvalue-test>
+            `);
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("undefined-rawvalue-test") as Element;
+            expect(component).toBeTruthy();
+
+            // Handler called once during binding setup with initial value "active"
+            expect(handlerCallCount).toBe(1);
+            expect(callValues[0]).toBe("active");
+
+            // Disable - computed returns undefined, handler should NOT be called
+            component.setState("enabled", false);
+
+            // Handler call count should remain 1 (undefined value skipped)
+            expect(handlerCallCount).toBe(1);
+
+            // Re-enable - computed returns "active", handler called again
+            component.setState("enabled", true);
+
+            expect(handlerCallCount).toBe(2);
+            expect(callValues[1]).toBe("active");
+        });
+
+        it("should handle customBindingHandlers when element or rawValue is missing", () => {
+            define("custom-handler-edge-test", function CustomHandlerEdgeTest({ $state, $customBindingHandlers }: Context) {
+                $state.testValue = "test";
+
+                $customBindingHandlers["test-handler"] = ({ element, rawValue }) => {
+                    if (element instanceof HTMLElement) {
+                        element.dataset.value = String(rawValue);
+                    }
+                };
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <custom-handler-edge-test>
+                    <div $bind-test-handler="testValue">Test</div>
+                </custom-handler-edge-test>
+            `);
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("custom-handler-edge-test") as Element;
+            expect(component).toBeTruthy();
+
+            // The handler should have been called with element and rawValue
+            const div = component.querySelector("div") as HTMLElement;
+            expect(div.dataset.value).toBe("test");
+        });
+
+        it("should ignore symbol keys in $state proxy set", () => {
+            let setResult = false;
+
+            define("state-symbol-set", function StateSymbolSet({ $state }: Context) {
+                const sym = Symbol("test");
+                setResult = Reflect.set($state as object, sym, "value");
+
+                $state.normalKey = "normalValue";
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture("<state-symbol-set></state-symbol-set>");
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("state-symbol-set") as Element;
+            expect(component).toBeTruthy();
+
+            // Set operation should return true (proxy returns true)
+            expect(setResult).toBe(true);
+
+            // Normal key should be set
+            expect(component.getState("normalKey")).toBe("normalValue");
+        });
+
+        it("should ignore invalid handler assignments in $customBindingHandlers", () => {
+            let stringNonFuncResult = false;
+            let symbolKeyResult = false;
+
+            define("handler-invalid-set", function HandlerInvalidSet({ $state, $customBindingHandlers }: Context) {
+                $state.test = "testValue";
+
+                // Try to set with string key but non-function value
+                stringNonFuncResult = Reflect.set($customBindingHandlers as object, "stringKey", "not a function");
+
+                // Try to set with symbol key
+                const sym = Symbol("handler");
+                symbolKeyResult = Reflect.set($customBindingHandlers as object, sym, () => "value");
+
+                // Valid handler should still work
+                $customBindingHandlers["valid-handler"] = ({ element, rawValue }) => {
+                    if (element instanceof HTMLElement) {
+                        element.dataset.valid = String(rawValue);
+                    }
+                };
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture(`
+                <handler-invalid-set>
+                    <div $bind-valid-handler="test">Content</div>
+                </handler-invalid-set>
+            `);
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("handler-invalid-set") as Element;
+            expect(component).toBeTruthy();
+
+            // Set operations should return true (proxy returns true)
+            expect(stringNonFuncResult).toBe(true);
+            expect(symbolKeyResult).toBe(true);
+
+            // Valid handler should have been called
+            const div = component.querySelector("div") as HTMLElement;
+            expect(div.dataset.valid).toBe("testValue");
+        });
+
+        it("should initialize state in constructor when definition is provided", () => {
+            define("constructor-init-test", function ConstructorInitTest({ $state }: Context) {
+                $state.value = "test";
+            });
+
+            const { root, cleanup: cleanupFn } = createFixture("<constructor-init-test></constructor-init-test>");
+            cleanup = cleanupFn;
+
+            const component = root.querySelector("constructor-init-test") as Element;
+            expect(component).toBeTruthy();
+            expect(component.getState("value")).toBe("test");
         });
     });
 });
