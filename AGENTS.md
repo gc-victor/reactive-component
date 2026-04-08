@@ -1,6 +1,6 @@
 # AGENTS.md
 
-**Project**: `reactive-component` • **Last Updated**: 2025-09-05 (UTC)
+**Project**: `reactive-component` • **Last Updated**: 2026-04-08 (UTC)
 
 ## Purpose
 
@@ -38,10 +38,9 @@ This file is the onboarding manual for every AI assistant (Claude, Cursor, GPT, 
 | ------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | **G-0** | Whenever unsure about something that's related to the project, ask the developer for clarification before making changes.   | ❌ Write changes or modify configs when you are not sure about project-specific expectations or conventions. |
 | **G-1** | Generate code **only inside** relevant source directories (`src/`, `components/`, `examples/`) or explicitly pointed files. | ❌ Touch `tests/` or specification files without explicit instruction (humans own tests & specs).            |
-| **G-2** | Add/update **`AIDEV-NOTE:`** anchor comments near non-trivial edited code.                                                  | ❌ Delete or mangle existing `AIDEV-*` comments.                                                             |
-| **G-3** | Follow the project's configured formatter and linter (Biome via `biome.json`). Use configured scripts.                      | ❌ Re-format code to any other style or add competing formatters/linters.                                    |
-| **G-4** | For changes **>300 LOC** or **>3 files**, ask for confirmation.                                                             | ❌ Refactor large modules without human guidance.                                                            |
-| **G-5** | Stay within the current task context. Inform the dev if it'd be better to start afresh.                                     | ❌ Continue work from a prior prompt after "new task" – start a fresh session.                               |
+| **G-2** | Follow the project's configured formatter and linter (Biome via `biome.json`). Use configured scripts.                      | ❌ Re-format code to any other style or add competing formatters/linters.                                    |
+| **G-3** | For changes **>300 LOC** or **>3 files**, ask for confirmation.                                                             | ❌ Refactor large modules without human guidance.                                                            |
+| **G-4** | Stay within the current task context. Inform the dev if it'd be better to start afresh.                                     | ❌ Continue work from a prior prompt after "new task" – start a fresh session.                               |
 
 ---
 
@@ -97,10 +96,10 @@ pnpm typecheck           # TypeScript type checking
 - **Keep** last valid state on binding errors; suggest corrections; use safe defaults
 
 ```typescript
-// AIDEV-NOTE: Guard example for state updates
+// Guard example for state updates
 function setCount(component: ReactiveComponent, value: unknown) {
   if (typeof value !== "number" || Number.isNaN(value)) {
-    // AIDEV-NOTE: keep last valid state; log and suggest correction
+    // keep last valid state; log and suggest correction
     console.error("Invalid count; expected number.");
     return; // keep last valid state
   }
@@ -145,27 +144,23 @@ function setCount(component: ReactiveComponent, value: unknown) {
 
 ---
 
-## 5. Anchor Comments
+## 5. Code Comments
 
 ### Introduction
 
-Add specially formatted comments throughout the codebase, where appropriate, for yourself as inline knowledge that can be easily `grep`ped for.
+Use code comments sparingly and only when they add context that is not obvious from the code itself.
 
 ### Guidelines
 
-- Use `AIDEV-NOTE:`, `AIDEV-TODO:`, or `AIDEV-QUESTION:` (all-caps) for comments aimed at AI and developers
-- Keep them concise (≤ 120 chars)
-- **Important**: Before scanning, locate existing anchors `AIDEV-*` in relevant subdirectories
-- Update relevant anchors when modifying associated code
-- Do not remove `AIDEV-NOTE`s without explicit instruction
-- Add anchors for long/complex/important code or potential pitfalls
+- Keep comments concise and relevant.
+- Prefer clear code and names over explanatory comments when possible.
+- Use comments for non-obvious constraints, invariants, or tradeoffs.
 
 ### Example
 
 ```typescript
-// AIDEV-NOTE: binding hot-path; avoid extra DOM reads; rely on computed props
-// AIDEV-TODO: support locale-aware formatting for 'count'
-// AIDEV-QUESTION: should disabled state mirror aria-disabled?
+// binding hot-path; avoid extra DOM reads; rely on computed props
+// Avoid direct DOM writes here; state updates drive the UI.
 ```
 
 ---
@@ -503,7 +498,7 @@ When responding to instructions, follow this process to ensure clarity, correctn
 | **5**  | **Non-Trivial Tasks**         | Present the plan for review; wait for approval on significant changes  |
 | **6**  | **Track Progress**            | Keep a to-do list for multi-step tasks                                 |
 | **7**  | **If Stuck, Re-plan**         | Reassess and adjust the plan                                           |
-| **8**  | **Update Documentation**      | Update anchor comments and AGENTS.md in touched directories            |
+| **8**  | **Update Documentation**      | Update AGENTS.md in touched directories when guidance changes          |
 | **9**  | **User Review**               | Ask for review and iterate as needed                                   |
 | **10** | **Session Boundaries**        | Suggest starting fresh if the request diverges from current context    |
 
