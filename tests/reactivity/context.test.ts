@@ -286,7 +286,7 @@ describe("ReactiveComponent Context API", () => {
     });
 
     describe("Context Consumer", () => {
-        it("should receive context from provider", () => {
+        it("should receive context from provider via subscription callback", () => {
             const { component: providerEl, cleanup: cleanupProvider } = createComponent(
                 "test-context-provider",
                 {},
@@ -294,17 +294,24 @@ describe("ReactiveComponent Context API", () => {
             );
 
             const provider = providerEl as unknown as TestContextProvider;
-
             const consumer = provider.querySelector("test-context-consumer") as unknown as ContextConsumerComponent;
             expect(consumer).not.toBeNull();
 
-            consumer.testSetState(TestContext.state, "provider-value");
+            // Initialize consumer state before consuming context
+            consumer.testSetState(TestContext.state, "initial");
 
-            expect(consumer.contextValue).toBe("provider-value");
+            // Consume context - this sets up the subscription callback
+            consumer.testConsumeContext(TestContext);
 
-            consumer.testSetState(TestContext.state, "new-value");
+            // Verify initial value from provider
+            expect(consumer.testGetState(TestContext.state)).toBe("provider-value");
 
-            expect(consumer.contextValue).toBe("new-value");
+            // Update provider state - this triggers the effect that broadcasts context update
+            // The subscription callback in rc.ts line 297-303 should fire
+            provider.testSetState(TestContext.state, "updated-from-provider");
+
+            // The consumer should receive the update via the subscription callback
+            expect(consumer.testGetState(TestContext.state)).toBe("updated-from-provider");
 
             cleanupProvider();
         });
