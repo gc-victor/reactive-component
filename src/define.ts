@@ -302,18 +302,16 @@ class Define extends ReactiveComponent {
         const ctor = this.constructor as typeof Define & { __definition?: Definition };
         const definition = ctor.__definition;
 
-        if (definition) {
-            // Call the definition function with the context
-            const result = definition.call(this as unknown as Element, context);
-            const ret = (typeof result === "object" && result !== null ? result : {}) as DefinitionReturn;
+        // biome-ignore lint/style/noNonNullAssertion: definition is set by define()
+        const result = definition!.call(this as unknown as Element, context);
+        const ret = (typeof result === "object" && result !== null ? result : {}) as DefinitionReturn;
 
-            const { connected, disconnected, adopted, attributeChanged } = ret;
+        const { connected, disconnected, adopted, attributeChanged } = ret;
 
-            if (connected) this.connected = connected;
-            if (disconnected) this.disconnected = disconnected;
-            if (adopted) this.adopted = adopted;
-            if (attributeChanged) this.attributeChanged = attributeChanged;
-        }
+        if (connected) this.connected = connected;
+        if (disconnected) this.disconnected = disconnected;
+        if (adopted) this.adopted = adopted;
+        if (attributeChanged) this.attributeChanged = attributeChanged;
     }
 
     // Override lifecycle methods to call define callbacks
@@ -402,6 +400,8 @@ export function define(name: string, definition: Definition): CustomElementConst
 }
 
 // Export for global access if needed
+/* v8 ignore start */
 if (typeof window !== "undefined") {
     (window as Window & { define?: typeof define }).define = define;
 }
+/* v8 ignore stop */
