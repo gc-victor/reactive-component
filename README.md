@@ -950,7 +950,7 @@ Important details and guidance:
 
 - These coercion rules are deterministic and intentionally conservative to avoid surprising application behavior (for example, `"0"` becomes the number `0`, but `"undefined"` remains a string).
 
-AIDEV-NOTE: Make UI/markup explicit instead of relying on `"undefined"`; prefer omitting attributes or using `null` / explicit JSON for complex values.
+Make UI/markup explicit instead of relying on `"undefined"`; prefer omitting attributes or using `null` / explicit JSON for complex values.
 
 ## Binding Validation Rules
 
