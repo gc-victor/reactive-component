@@ -7,14 +7,15 @@
         "dev": "sxo dev",
         "build": "sxo build",
         "start": "sxo start",
+        "server": "sxo build && sxo generate && sxo start",
         "tailwind": "tailwindcss -i src/styles/tailwind.css -o src/pages/global.css"
     },
     "dependencies": {
-        "sxo": "0.6.1"
+        "sxo": "0.10.1"
     },
     "devDependencies": {
-        "@tailwindcss/cli": "^4.1.16",
-        "tailwindcss": "^4.1.16",
-        "typescript": "^5.9.3"
+        "@tailwindcss/cli": "^4.2.2",
+        "tailwindcss": "^4.2.2",
+        "typescript": "^6.0.2"
     }
 }
