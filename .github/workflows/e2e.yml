@@ -44,17 +44,17 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
 
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm playwright:install
-
-      - name: Start example server
-        run: pnpm example:server &
-
-      - name: Wait for server
         run: |
-          timeout 30 sh -c 'until curl -s http://localhost:3000 > /dev/null; do sleep 1; done'
+          while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
+            sleep 1
+          done
+          npx playwright install --with-deps
+        timeout-minutes: 5
 
       - name: Run E2E tests
         run: pnpm test:e2e
