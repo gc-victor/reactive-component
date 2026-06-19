@@ -552,7 +552,12 @@ export class ReactiveComponent extends HTMLElement {
      * @protected
      */
     protected effect(callback: () => void): () => void {
-        return effect(callback);
+        return effect(() => {
+            const result = callback();
+            // alien-signals uses the return value as cleanup; only preserve functions
+            if (typeof result === "function") return result;
+            return undefined;
+        });
     }
 
     /**
